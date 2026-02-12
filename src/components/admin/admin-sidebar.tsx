@@ -26,7 +26,7 @@ const menuItems = [
   { href: '/admin/mcqs', label: 'MCQs', icon: ListChecks },
   { href: '/admin/problems', label: 'Problems', icon: FileCode2 },
   { href: '/admin/rounds', label: 'Rounds', icon: Settings },
-  { href: '/admin/results', label: 'Results', icon: Trophy },
+  { href: '/admin/results', label: 'Leaderboard', icon: Trophy },
 ];
 
 export function AdminSidebar() {

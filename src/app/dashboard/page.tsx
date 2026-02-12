@@ -47,7 +47,10 @@ export default function DashboardPage() {
         return { ...r, status: 'Completed' };
       }
       if (r.round === 1 || completedRounds.includes(String(r.round - 1))) {
-        return { ...r, status: 'Unlocked' };
+        // Unlock current round if previous is completed, or if it's the first round.
+        if ( !completedRounds.includes(String(r.round))) {
+            return { ...r, status: 'Unlocked' };
+        }
       }
       return r;
     });
@@ -66,12 +69,6 @@ export default function DashboardPage() {
             The competition is live. Choose a round to begin.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/leaderboard">
-            <BarChart className="mr-2 h-4 w-4" />
-            View Leaderboard
-          </Link>
-        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

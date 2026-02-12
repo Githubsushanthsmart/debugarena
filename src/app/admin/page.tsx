@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
           <Button variant="outline" asChild><Link href="/admin/mcqs">Manage MCQs</Link></Button>
           <Button variant="outline" asChild><Link href="/admin/problems">Manage Problems</Link></Button>
           <Button variant="outline" asChild><Link href="/admin/rounds">Configure Rounds</Link></Button>
-          <Button variant="outline" asChild><Link href="/admin/results">Export Results</Link></Button>
+          <Button variant="outline" asChild><Link href="/admin/results">View Leaderboard</Link></Button>
         </CardContent>
       </Card>
     </div>

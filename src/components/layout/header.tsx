@@ -19,7 +19,6 @@ export function Header() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/leaderboard', label: 'Leaderboard', icon: BarChart },
   ];
 
   const teamNameInitials = currentTeam.name.split(' ').map(s => s[0]).join('');
