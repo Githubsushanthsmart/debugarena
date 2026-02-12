@@ -10,7 +10,7 @@ const initialRounds = [
   {
     round: 1,
     title: 'MCQ Round',
-    description: '20 minutes to answer 20 multiple-choice questions.',
+    description: '15 minutes to answer 20 multiple-choice questions.',
     status: 'Locked',
     icon: 'ListChecks',
     href: '/round/1',
