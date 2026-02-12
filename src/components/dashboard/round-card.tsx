@@ -11,16 +11,22 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { LucideIcon } from 'lucide-react';
-import { Lock, PlayCircle } from 'lucide-react';
+import { Lock, PlayCircle, ListChecks, FileCode2, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+
+const iconMap: Record<string, LucideIcon> = {
+  ListChecks,
+  FileCode2,
+  Trophy,
+};
 
 type RoundCardProps = {
   round: number;
   title: string;
   description: string;
   status: 'Locked' | 'Unlocked' | 'Completed';
-  icon: LucideIcon;
+  icon: string;
   href: string;
 };
 
@@ -29,11 +35,12 @@ export function RoundCard({
   title,
   description,
   status,
-  icon: Icon,
+  icon,
   href,
 }: RoundCardProps) {
   const router = useRouter();
   const isLocked = status === 'Locked';
+  const Icon = iconMap[icon];
 
   return (
     <Card
@@ -50,7 +57,7 @@ export function RoundCard({
           >
             Round {round}
           </Badge>
-          <Icon className={cn('h-6 w-6', isLocked ? 'text-muted-foreground' : 'text-primary')} />
+          {Icon && <Icon className={cn('h-6 w-6', isLocked ? 'text-muted-foreground' : 'text-primary')} />}
         </div>
       </CardHeader>
       <CardContent className="flex-grow">

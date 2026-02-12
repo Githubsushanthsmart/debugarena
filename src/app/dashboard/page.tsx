@@ -1,7 +1,7 @@
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { RoundCard } from '@/components/dashboard/round-card';
 import { Button } from '@/components/ui/button';
-import { BarChart, FileCode2, ListChecks, Trophy } from 'lucide-react';
+import { BarChart } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -11,7 +11,7 @@ export default function DashboardPage() {
       title: 'MCQ Round',
       description: '15 minutes to answer 20 multiple-choice questions.',
       status: 'Unlocked',
-      icon: ListChecks,
+      icon: 'ListChecks',
       href: '/round/1',
     },
     {
@@ -19,7 +19,7 @@ export default function DashboardPage() {
       title: 'Debugging Round',
       description: '15 minutes to find and fix bugs in the given code.',
       status: 'Locked',
-      icon: FileCode2,
+      icon: 'FileCode2',
       href: '/round/2',
     },
     {
@@ -27,7 +27,7 @@ export default function DashboardPage() {
       title: 'CodeTantra Final',
       description: '25 minutes to solve the final coding challenge.',
       status: 'Locked',
-      icon: Trophy,
+      icon: 'Trophy',
       href: '/round/3',
     },
   ];
