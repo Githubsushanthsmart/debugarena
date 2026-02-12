@@ -19,17 +19,27 @@ import { useRouter } from 'next/navigation';
 export function DebuggingView() {
   const router = useRouter();
 
-  const handleFinish = useCallback(() => {
-    alert('Time is up!');
+  const handleSubmit = useCallback(() => {
+    alert('Submitting solution...');
+    const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
+    if (!completedRounds.includes('2')) {
+        completedRounds.push('2');
+        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
+    }
     router.push('/dashboard');
   }, [router]);
+
+  const handleFinish = useCallback(() => {
+    alert('Time is up!');
+    handleSubmit();
+  }, [handleSubmit]);
   
   const handleWarning = useCallback((warningCount: number) => {
     if (warningCount >= 3) {
       alert('You have reached the maximum number of warnings. Your test will be submitted automatically.');
-      router.push('/dashboard');
+      handleSubmit();
     }
-  }, [router]);
+  }, [handleSubmit]);
 
   useAntiCheat(handleWarning);
 
@@ -76,7 +86,7 @@ export function DebuggingView() {
             <Button variant="secondary">
               <Play className="mr-2 h-4 w-4" /> Run Code
             </Button>
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button onClick={handleSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <Send className="mr-2 h-4 w-4" /> Submit
             </Button>
           </div>

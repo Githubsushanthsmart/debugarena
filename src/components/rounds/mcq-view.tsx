@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,42 +9,54 @@ import {
 } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { mockMcqSetA } from '@/lib/mock-data';
+import { mockMcqSetA, mockMcqSetB, currentTeam } from '@/lib/mock-data';
 import type { MCQ } from '@/lib/types';
-import { Countdown } from '@/components/shared/countdown';
 import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 
 export function McqView() {
   const router = useRouter();
-  const [questions] = useState<MCQ[]>(mockMcqSetA);
+
+  const questions = useMemo(() => {
+    // A simple way to assign sets. Odd IDs get Set A, Even IDs get Set B.
+    const teamId = parseInt(currentTeam.id, 10);
+    return teamId % 2 !== 0 ? mockMcqSetA : mockMcqSetB;
+  }, []);
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const handleFinish = useCallback(() => {
-    alert('Time is up! Submitting your answers.');
-    // Here you would implement auto-submission logic
+  const handleSubmit = useCallback(() => {
+    alert('Submitting answers...');
+    const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
+    if (!completedRounds.includes('1')) {
+        completedRounds.push('1');
+        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
+    }
     router.push('/dashboard');
   }, [router]);
+
+  const handleFinish = useCallback(() => {
+    alert('Time is up! Submitting your answers.');
+    handleSubmit();
+  }, [handleSubmit]);
   
   const handleWarning = useCallback((warningCount: number) => {
     if (warningCount >= 3) {
       alert('You have reached the maximum number of warnings. Your test will be submitted automatically.');
-      router.push('/dashboard');
+      handleSubmit();
     }
-  }, [router]);
+  }, [handleSubmit]);
 
   useAntiCheat(handleWarning);
-
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       // This is the final question, so the button submits
-      alert('Submitting answers...');
-      router.push('/dashboard');
+      handleSubmit();
     }
   };
 
@@ -60,14 +72,14 @@ export function McqView() {
       <RoundHeader
         round={1}
         title="MCQ Round"
-        countdownDuration={15 * 60}
+        countdownDuration={20 * 60}
         onFinish={handleFinish}
       />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-gray-900/50 to-background">
         <Card className="w-full max-w-2xl animate-fade-in">
           <CardHeader>
             <Progress value={progress} className="mb-4" />
-            <CardTitle className="font-headline text-xl md:text-2xl leading-relaxed">
+            <CardTitle className="font-headline text-xl md:text-2xl leading-relaxed whitespace-pre-wrap">
               {currentQuestionIndex + 1}. {currentQuestion.question}
             </CardTitle>
           </CardHeader>

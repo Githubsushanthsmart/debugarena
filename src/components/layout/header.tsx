@@ -12,6 +12,7 @@ import { Code2, ChevronDown, BarChart, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { currentTeam } from '@/lib/mock-data';
 
 export function Header() {
   const pathname = usePathname();
@@ -20,6 +21,8 @@ export function Header() {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/leaderboard', label: 'Leaderboard', icon: BarChart },
   ];
+
+  const teamNameInitials = currentTeam.name.split(' ').map(s => s[0]).join('');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -54,18 +57,18 @@ export function Header() {
                 className="flex items-center gap-2"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://picsum.photos/seed/1/32/32" />
-                  <AvatarFallback>BS</AvatarFallback>
+                  <AvatarImage src={`https://picsum.photos/seed/${currentTeam.id}/32/32`} />
+                  <AvatarFallback>{teamNameInitials}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline">The Bug Slayers</span>
+                <span className="hidden md:inline">{currentTeam.name}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
-                <p>The Bug Slayers</p>
+                <p>{currentTeam.name}</p>
                 <p className="text-xs text-muted-foreground font-normal">
-                  Tech University
+                  {currentTeam.college}
                 </p>
               </DropdownMenuLabel>
             </DropdownMenuContent>

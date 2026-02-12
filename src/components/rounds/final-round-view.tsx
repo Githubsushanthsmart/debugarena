@@ -21,17 +21,27 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export function FinalRoundView() {
   const router = useRouter();
 
+  const handleSubmit = useCallback(() => {
+    alert('Submitting final solution...');
+    const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
+    if (!completedRounds.includes('3')) {
+        completedRounds.push('3');
+        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
+    }
+    router.push('/leaderboard');
+  }, [router]);
+
   const handleFinish = useCallback(() => {
     alert('Time is up!');
-    router.push('/dashboard');
-  }, [router]);
+    handleSubmit();
+  }, [handleSubmit]);
   
   const handleWarning = useCallback((warningCount: number) => {
     if (warningCount >= 3) {
       alert('You have reached the maximum number of warnings. Your test will be submitted automatically.');
-      router.push('/dashboard');
+      handleSubmit();
     }
-  }, [router]);
+  }, [handleSubmit]);
 
   useAntiCheat(handleWarning);
 
@@ -82,7 +92,7 @@ export function FinalRoundView() {
             <Button variant="secondary">
               <Play className="mr-2 h-4 w-4" /> Run Code
             </Button>
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button onClick={handleSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <Send className="mr-2 h-4 w-4" /> Submit
             </Button>
           </div>
