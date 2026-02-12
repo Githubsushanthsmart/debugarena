@@ -6,7 +6,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
   SidebarTrigger,
   SidebarContent,
   useSidebar,
@@ -16,14 +15,11 @@ import {
   ListChecks,
   FileCode2,
   Trophy,
-  Users,
-  LogOut,
   Code2,
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Button } from '../ui/button';
+import { usePathname } from 'next/navigation';
 
 const menuItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -35,13 +31,8 @@ const menuItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { open } = useSidebar();
   
-  const handleLogout = () => {
-    router.push('/');
-  }
-
   return (
     <Sidebar>
       <SidebarHeader>
@@ -70,12 +61,6 @@ export function AdminSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleLogout}>
-          <LogOut />
-          <span>Logout</span>
-        </Button>
-      </SidebarFooter>
     </Sidebar>
   );
 }

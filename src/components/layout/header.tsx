@@ -3,27 +3,18 @@
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Code2, ChevronDown, LogOut, BarChart, LayoutDashboard } from 'lucide-react';
+import { Code2, ChevronDown, BarChart, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
 
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    // In a real app, you'd handle Firebase logout here.
-    router.push('/');
-  };
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -77,11 +68,6 @@ export function Header() {
                   Tech University
                 </p>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
