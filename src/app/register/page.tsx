@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Code2 } from 'lucide-react';
+import type { Team } from '@/lib/types';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function RegisterPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (teamName.trim() && members.trim()) {
-      const teamInfo = {
+      const teamInfo: Team = {
         id: teamName.toLowerCase().replace(/\s+/g, '-'), // generate an id
         name: teamName.trim(),
         members: members
@@ -35,6 +36,19 @@ export default function RegisterPage() {
         timeTaken: '00:00:00',
       };
       localStorage.setItem('currentTeam', JSON.stringify(teamInfo));
+      
+      const leaderboardStr = localStorage.getItem('liveLeaderboard');
+      const leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
+      
+      const existingTeamIndex = leaderboard.findIndex(t => t.id === teamInfo.id);
+      if (existingTeamIndex !== -1) {
+        leaderboard[existingTeamIndex] = { ...leaderboard[existingTeamIndex], ...teamInfo};
+      } else {
+        leaderboard.push(teamInfo);
+      }
+      
+      localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+
       router.push('/dashboard');
     }
   };

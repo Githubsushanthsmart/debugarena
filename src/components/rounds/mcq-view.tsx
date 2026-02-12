@@ -14,12 +14,10 @@ import type { MCQ } from '@/lib/types';
 import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import { McqSetSelector } from './mcq-set-selector';
 
 export function McqView() {
   const router = useRouter();
-  const { toast } = useToast();
   const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
 
   const questions: MCQ[] = useMemo(() => {
@@ -39,19 +37,29 @@ export function McqView() {
       }
     });
 
-    toast({
-      title: 'MCQ Round Completed!',
-      description: `You scored ${score} out of ${questions.length}.`,
-      duration: 5000,
-    });
+    localStorage.setItem('lastRoundScore', JSON.stringify(score));
+
+    const teamData = localStorage.getItem('currentTeam');
+    if (teamData) {
+      const currentTeam = JSON.parse(teamData);
+      const leaderboardStr = localStorage.getItem('liveLeaderboard');
+      let leaderboard: MCQ[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
+      
+      const teamIndex = leaderboard.findIndex((t: any) => t.id === currentTeam.id);
+      if (teamIndex !== -1) {
+        leaderboard[teamIndex] = { ...leaderboard[teamIndex], score: score };
+      }
+      localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+    }
+
 
     const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
     if (!completedRounds.includes('1')) {
         completedRounds.push('1');
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
-    router.push('/dashboard');
-  }, [router, answers, questions, toast]);
+    router.push('/score');
+  }, [router, answers, questions]);
 
   const handleFinish = useCallback(() => {
     alert('Time is up! Submitting your answers.');
@@ -71,7 +79,6 @@ export function McqView() {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // This is the final question, so the button submits
       handleSubmit();
     }
   };
