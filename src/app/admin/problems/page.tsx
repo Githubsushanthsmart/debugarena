@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { mockDebuggingProblem, mockFinalProblem } from "@/lib/mock-data";
+import { mockDebuggingProblems, mockFinalProblem } from "@/lib/mock-data";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdminProblemsPage() {
     const problems = [
-        { ...mockDebuggingProblem, type: "Debugging" },
-        { ...mockFinalProblem, type: "Final Round" }
+        ...mockDebuggingProblems.map(p => ({...p, type: "Debugging"})),
+        { ...mockFinalProblem, type: "Final Round", language: "python" }
     ]
   return (
     <div className="p-4 md:p-8">

@@ -299,32 +299,339 @@ export const mockMcqSetB: MCQ[] = [
 ];
 
 
-export const mockDebuggingProblem: DebuggingProblem = {
-  id: 'dbg-1',
-  title: 'Find the Bug: Array Sum',
-  language: 'python',
-  description: 'The following Python function is supposed to calculate the sum of all elements in a list. However, it\'s returning an incorrect result. Find and fix the bug.',
-  buggyCode: `def calculate_sum(numbers):
-  sum = 0
-  for i in range(len(numbers)):
-    sum = numbers[i]
-  return sum
+export const mockDebuggingProblems: DebuggingProblem[] = [
+  // Python
+  {
+    id: 'dbg-py-1',
+    title: 'Find the Bug: Binary Search',
+    language: 'python',
+    description: 'The following Python function is supposed to perform a binary search on a sorted array. However, it contains bugs that prevent it from working correctly. Find and fix the bugs.',
+    buggyCode: `def binary_search(arr, x):
+    low = 0
+    high = len(arr)
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == x:
+            return mid
+        elif arr[mid] < x:
+            low = mid
+        else:
+            high = mid - 1
+    return -1`,
+    solutionCode: `def binary_search(arr, x):
+    low = 0
+    high = len(arr) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] < x:
+            low = mid + 1
+        elif arr[mid] > x:
+            high = mid - 1
+        else:
+            return mid
+    return -1`
+  },
+  {
+    id: 'dbg-py-2',
+    title: 'Find the Bug: Third Maximum Element',
+    language: 'python',
+    description: 'This function should find the third distinct maximum number in a list. If the third maximum does not exist, it should return the maximum number. It has bugs in handling duplicate values.',
+    buggyCode: `def third_max(nums):
+    first = second = third = float('-inf')
+    for n in nums:
+        if n > first:
+            third = second
+            second = first
+            first = n
+        elif n > second:
+            third = second
+            second = n
+        elif n > third:
+            third = n
+    return third`,
+    solutionCode: `def third_max(nums):
+    first = second = third = float('-inf')
+    for n in nums:
+        if n == first or n == second:
+            continue
+        if n > first:
+            third = second
+            second = first
+            first = n
+        elif n > second:
+            third = second
+            second = n
+        elif n > third:
+            third = n
+    return first if third == float('-inf') else third`
+  },
+  {
+    id: 'dbg-py-3',
+    title: 'Find the Bug: Validate Binary Search Tree',
+    language: 'python',
+    description: 'This function checks if a binary tree is a valid Binary Search Tree (BST). There is a logical error in the recursion. Note: TreeNode class definition is assumed to exist.',
+    buggyCode: `def isValidBST(root):
+    def helper(node, low, high):
+        if node is None:
+            return True
+        if node.val <= low or node.val >= high:
+            return False
+        return helper(node.left, low, node.val) or helper(node.right, node.val, high)
+    return helper(root, float('-inf'), float('inf'))`,
+    solutionCode: `def isValidBST(root):
+    def helper(node, low, high):
+        if node is None:
+            return True
+        if node.val <= low or node.val >= high:
+            return False
+        return helper(node.left, low, node.val) and helper(node.right, node.val, high)
+    return helper(root, float('-inf'), float('inf'))`
+  },
+  // Java
+  {
+    id: 'dbg-java-1',
+    title: 'Find the Bug: Bubble Sort',
+    language: 'java',
+    description: 'The following Java method for Bubble Sort has a bug that causes an ArrayIndexOutOfBoundsException. Find and fix it.',
+    buggyCode: `public static void bubbleSort(int arr[]) {
+    for(int i=0; i<arr.length; i++){
+        for(int j=0; j<arr.length-i; j++){
+            if(arr[j] > arr[j+1]){
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}`,
+    solutionCode: `public static void bubbleSort(int arr[]) {
+    for(int i=0; i<arr.length-1; i++){
+        for(int j=0; j<arr.length-i-1; j++){
+            if(arr[j] > arr[j+1]){
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}`
+  },
+  {
+    id: 'dbg-java-2',
+    title: 'Find the Bug: Selection Sort',
+    language: 'java',
+    description: 'This Selection Sort implementation has a bug in how it tracks and uses the minimum element. Find and fix it.',
+    buggyCode: `public static void selectionSort(int arr[]){
+    for(int i=0; i<arr.length; i++){
+        int min = arr[i];
+        for(int j=i+1; j<arr.length; j++){
+            if(arr[j] < min){
+                min = j;
+            }
+        }
+        int temp = arr[i];
+        arr[i] = arr[min];
+        arr[min] = temp;
+    }
+}`,
+    solutionCode: `public static void selectionSort(int arr[]){
+    for(int i=0; i<arr.length-1; i++){
+        int min_idx = i;
+        for(int j=i+1; j<arr.length; j++){
+            if(arr[j] < arr[min_idx]){
+                min_idx = j;
+            }
+        }
+        int temp = arr[min_idx];
+        arr[min_idx] = arr[i];
+        arr[i] = temp;
+    }
+}`
+  },
+  {
+    id: 'dbg-java-3',
+    title: 'Find the Bug: Insertion Sort',
+    language: 'java',
+    description: 'This Insertion Sort method has a bug in its inner while loop that causes it to not sort correctly. Find and fix it.',
+    buggyCode: `public static void insertionSort(int arr[]){
+    for(int i=1; i<arr.length; i++){
+        int key = arr[i];
+        int j = i-1;
+        while(j>=0 && arr[j] > key){
+            arr[j+1] = arr[j];
+            j++;
+        }
+        arr[j+1] = key;
+    }
+}`,
+    solutionCode: `public static void insertionSort(int arr[]){
+    for(int i=1; i<arr.length; i++){
+        int key = arr[i];
+        int j = i-1;
+        while(j>=0 && arr[j] > key){
+            arr[j+1] = arr[j];
+            j--;
+        }
+        arr[j+1] = key;
+    }
+}`
+  },
+  {
+    id: 'dbg-java-4',
+    title: 'Find the Bug: Merge Sort Merge Function',
+    language: 'java',
+    description: 'The merge helper function for Merge Sort is incomplete. It initializes temporary arrays but never populates them with data. Fix the function.',
+    buggyCode: `void merge(int arr[], int l, int m, int r){
+    int n1 = m-l+1;
+    int n2 = r-m;
+    int L[] = new int[n1];
+    int R[] = new int[n2];
+    int i=0,j=0,k=l;
+    while(i<n1 && j<n2){
+        if(L[i]<=R[j]){
+            arr[k++] = L[i++];
+        } else {
+            arr[k++] = R[j++];
+        }
+    }
+}`,
+    solutionCode: `void merge(int arr[], int l, int m, int r){
+    int n1 = m - l + 1;
+    int n2 = r - m;
+    int L[] = new int[n1];
+    int R[] = new int[n2];
+    for (int i = 0; i < n1; ++i)
+        L[i] = arr[l + i];
+    for (int j = 0; j < n2; ++j)
+        R[j] = arr[m + 1 + j];
+    int i = 0, j = 0;
+    int k = l;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            arr[k] = L[i];
+            i++;
+        }
+        else {
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+    while (i < n1) {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+    while (j < n2) {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}`
+  },
+  {
+    id: 'dbg-java-5',
+    title: 'Find the Bug: Quick Sort Partition',
+    language: 'java',
+    description: 'The partition logic for Quick Sort is incorrect, leading to a wrong sort. Fix the partitioning method.',
+    buggyCode: `int partition(int arr[], int low, int high){
+    int pivot = arr[high];
+    int i = low;
+    for(int j=low; j<=high; j++){
+        if(arr[j] < pivot){
+            i++;
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+    return i;
+}`,
+    solutionCode: `int partition(int arr[], int low, int high){
+    int pivot = arr[high];
+    int i = (low - 1);
+    for(int j=low; j<high; j++){
+        if(arr[j] < pivot){
+            i++;
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+    int temp = arr[i+1];
+    arr[i+1] = arr[high];
+    arr[high] = temp;
+    return (i+1);
+}`
+  },
+  {
+    id: 'dbg-java-6',
+    title: 'Find the Bug: Heap Sort Heapify',
+    language: 'java',
+    description: 'The heapify function for Heap Sort uses incorrect indexing for children and is missing a recursive call. Find and fix the bugs.',
+    buggyCode: `void heapify(int arr[], int n, int i){
+    int largest = i;
+    int l = 2*i;
+    int r = 2*i+1;
+    if(l<n && arr[l]>arr[largest]) largest=l;
+    if(r<n && arr[r]>arr[largest]) largest=r;
+    if(largest!=i){
+        int temp=arr[i];
+        arr[i]=arr[largest];
+        arr[largest]=temp;
+    }
+}`,
+    solutionCode: `void heapify(int arr[], int n, int i){
+    int largest = i;
+    int l = 2*i + 1;
+    int r = 2*i + 2;
+    if(l<n && arr[l]>arr[largest]) largest=l;
+    if(r<n && arr[r]>arr[largest]) largest=r;
+    if(largest!=i){
+        int temp=arr[i];
+        arr[i]=arr[largest];
+        arr[largest]=temp;
+        heapify(arr, n, largest);
+    }
+}`
+  },
+    {
+    id: 'dbg-java-7',
+    title: 'Find the Bug: Counting Sort',
+    language: 'java',
+    description: 'This Counting Sort implementation is buggy and incomplete. It fails to find the correct maximum value and doesn\'t construct the sorted output. Fix the logic.',
+    buggyCode: `int[] countSort(int arr[]){
+    int max = arr[0];
+    for(int i=0;i<arr.length;i++)
+        if(arr[i]>max) max=i;
 
-# Example usage:
-# print(calculate_sum([1, 2, 3, 4, 5]))
-# Expected output: 15
-# Actual output: 5`,
-  solutionCode: `def calculate_sum(numbers):
-  sum = 0
-  for i in range(len(numbers)):
-    sum += numbers[i]
-  return sum
+    int count[] = new int[max];
+    for(int i=0;i<arr.length;i++)
+        count[arr[i]]++;
+    return count;
+}`,
+    solutionCode: `int[] countSort(int arr[]){
+    if (arr.length == 0) return new int[0];
+    int max = arr[0];
+    for(int i=1; i<arr.length; i++)
+        if(arr[i]>max) max=arr[i];
 
-# Example usage:
-# print(calculate_sum([1, 2, 3, 4, 5]))
-# Expected output: 15
-# Actual output: 15`
-};
+    int count[] = new int[max + 1];
+    for(int i=0; i<arr.length; i++)
+        count[arr[i]]++;
+    
+    int sortedIndex = 0;
+    for(int i = 0; i < count.length; i++) {
+        while(count[i] > 0) {
+            arr[sortedIndex++] = i;
+            count[i]--;
+        }
+    }
+    return arr;
+}`
+  }
+];
+
 
 export const mockFinalProblem: FinalProblem = {
     id: 'fin-1',

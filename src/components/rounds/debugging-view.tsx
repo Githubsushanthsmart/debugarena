@@ -19,60 +19,77 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { mockDebuggingProblem } from '@/lib/mock-data';
+} from '@/components/ui/alert-dialog';
+import { mockDebuggingProblems } from '@/lib/mock-data';
 import { Play, Send } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
-import type { Team } from '@/lib/types';
+import type { Team, DebuggingProblem } from '@/lib/types';
 
 export function DebuggingView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
-  const problem = mockDebuggingProblem;
-  const [code, setCode] = useState(problem.buggyCode);
+  const [problem, setProblem] = useState<DebuggingProblem | null>(null);
+  const [code, setCode] = useState('');
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
 
-  const endRound = useCallback((isCorrect: boolean) => {
-    const score = isCorrect ? 100 : 0; // 100 points for correct, 0 for incorrect/timeout/cheating
-    localStorage.setItem('lastRoundScore', JSON.stringify(score));
+  const handleLanguageSelect = (lang: 'python' | 'java') => {
+    const problems = mockDebuggingProblems.filter((p) => p.language === lang);
+    const randomProblem = problems[Math.floor(Math.random() * problems.length)];
+    setProblem(randomProblem);
+    setCode(randomProblem.buggyCode);
+  };
 
-    const teamData = localStorage.getItem('currentTeam');
-    if (teamData) {
-      const currentTeam: Team = JSON.parse(teamData);
-      const newTotalScore = (currentTeam.score || 0) + score;
-      
-      const leaderboardStr = localStorage.getItem('liveLeaderboard');
-      let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
-      
-      const teamIndex = leaderboard.findIndex(t => t.id === currentTeam.id);
-      if (teamIndex !== -1) {
-        leaderboard[teamIndex].score = newTotalScore;
+  const endRound = useCallback(
+    (isCorrect: boolean) => {
+      const score = isCorrect ? 100 : 0; // 100 points for correct, 0 for incorrect/timeout/cheating
+      localStorage.setItem('lastRoundScore', JSON.stringify(score));
+
+      const teamData = localStorage.getItem('currentTeam');
+      if (teamData) {
+        const currentTeam: Team = JSON.parse(teamData);
+        const newTotalScore = (currentTeam.score || 0) + score;
+
+        const leaderboardStr = localStorage.getItem('liveLeaderboard');
+        let leaderboard: Team[] = leaderboardStr
+          ? JSON.parse(leaderboardStr)
+          : [];
+
+        const teamIndex = leaderboard.findIndex((t) => t.id === currentTeam.id);
+        if (teamIndex !== -1) {
+          leaderboard[teamIndex].score = newTotalScore;
+        }
+
+        localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+        localStorage.setItem(
+          'currentTeam',
+          JSON.stringify({ ...currentTeam, score: newTotalScore })
+        );
       }
-      
-      localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
-      localStorage.setItem('currentTeam', JSON.stringify({ ...currentTeam, score: newTotalScore }));
-    }
 
-    const completedRounds = JSON.parse(
-      localStorage.getItem('completedRounds') || '[]'
-    );
-    if (!completedRounds.includes('2')) {
-      completedRounds.push('2');
-      localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
-    }
-    router.push('/score');
-  }, [router]);
+      const completedRounds = JSON.parse(
+        localStorage.getItem('completedRounds') || '[]'
+      );
+      if (!completedRounds.includes('2')) {
+        completedRounds.push('2');
+        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
+      }
+      router.push('/score');
+    },
+    [router]
+  );
 
   const handleSubmit = () => {
+    if (!problem) return;
     // A simple way to check correctness is to remove all whitespace and compare.
-    const isCorrect = code.replace(/\s+/g, '') === problem.solutionCode.replace(/\s+/g, '');
+    const isCorrect =
+      code.replace(/\s+/g, '') === problem.solutionCode.replace(/\s+/g, '');
     setIsSolutionCorrect(isCorrect);
     setShowResultDialog(true);
   };
-  
+
   const handleDialogContinue = () => {
     setShowResultDialog(false);
     endRound(isSolutionCorrect);
@@ -279,6 +296,43 @@ export function DebuggingView() {
     );
   }
 
+  if (!problem) {
+    return (
+      <div className="flex flex-col h-screen font-code">
+        <RoundHeader
+          round={2}
+          title="Debugging Round"
+          countdownDuration={15 * 60}
+          onFinish={handleFinish}
+        />
+        <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background">
+          <Card className="w-full max-w-md animate-fade-in">
+            <CardHeader>
+              <CardTitle className="font-headline text-2xl text-center">
+                Choose Your Language
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center gap-4">
+              <Button
+                onClick={() => handleLanguageSelect('python')}
+                className="text-lg py-6 px-12"
+              >
+                Python
+              </Button>
+              <Button
+                onClick={() => handleLanguageSelect('java')}
+                variant="secondary"
+                className="text-lg py-6 px-12"
+              >
+                Java
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen font-code">
       <RoundHeader
@@ -310,7 +364,7 @@ export function DebuggingView() {
         {/* Right Panel: Editor & Console */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
-            <Select defaultValue="python">
+            <Select value={problem.language} disabled>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select Language" />
               </SelectTrigger>
@@ -354,16 +408,19 @@ export function DebuggingView() {
       <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{isSolutionCorrect ? "Correct!" : "Incorrect"}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isSolutionCorrect ? 'Correct!' : 'Incorrect'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {isSolutionCorrect 
+              {isSolutionCorrect
                 ? "Congratulations! You've fixed the bug. You will now proceed to the score screen."
-                : "Your solution is incorrect. The round is now over. You will now proceed to the score screen."
-              }
+                : 'Your solution is incorrect. The round is now over. You will now proceed to the score screen.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={handleDialogContinue}>Continue</AlertDialogAction>
+            <AlertDialogAction onClick={handleDialogContinue}>
+              Continue
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
