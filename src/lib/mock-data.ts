@@ -313,7 +313,17 @@ export const mockDebuggingProblem: DebuggingProblem = {
 # Example usage:
 # print(calculate_sum([1, 2, 3, 4, 5]))
 # Expected output: 15
-# Actual output: 5`
+# Actual output: 5`,
+  solutionCode: `def calculate_sum(numbers):
+  sum = 0
+  for i in range(len(numbers)):
+    sum += numbers[i]
+  return sum
+
+# Example usage:
+# print(calculate_sum([1, 2, 3, 4, 5]))
+# Expected output: 15
+# Actual output: 15`
 };
 
 export const mockFinalProblem: FinalProblem = {

@@ -21,6 +21,7 @@ export type DebuggingProblem = {
   language: 'java' | 'python';
   buggyCode: string;
   description: string;
+  solutionCode: string;
 };
 
 export type FinalProblem = {

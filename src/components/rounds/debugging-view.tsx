@@ -11,6 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { mockDebuggingProblem } from '@/lib/mock-data';
 import { Play, Send } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
@@ -21,13 +30,15 @@ import type { Team } from '@/lib/types';
 export function DebuggingView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
+  const problem = mockDebuggingProblem;
+  const [code, setCode] = useState(problem.buggyCode);
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
 
-  const handleSubmit = useCallback(() => {
-    // This is a mock submission. In a real app, you'd send the code to a server for evaluation.
-    const score = Math.floor(Math.random() * 50) + 50; // Mock score
+  const endRound = useCallback((isCorrect: boolean) => {
+    const score = isCorrect ? 100 : 0; // 100 points for correct, 0 for incorrect/timeout/cheating
     localStorage.setItem('lastRoundScore', JSON.stringify(score));
 
-    // Update total score
     const teamData = localStorage.getItem('currentTeam');
     if (teamData) {
       const currentTeam: Team = JSON.parse(teamData);
@@ -45,7 +56,6 @@ export function DebuggingView() {
       localStorage.setItem('currentTeam', JSON.stringify({ ...currentTeam, score: newTotalScore }));
     }
 
-
     const completedRounds = JSON.parse(
       localStorage.getItem('completedRounds') || '[]'
     );
@@ -56,10 +66,22 @@ export function DebuggingView() {
     router.push('/score');
   }, [router]);
 
+  const handleSubmit = () => {
+    // A simple way to check correctness is to remove all whitespace and compare.
+    const isCorrect = code.replace(/\s+/g, '') === problem.solutionCode.replace(/\s+/g, '');
+    setIsSolutionCorrect(isCorrect);
+    setShowResultDialog(true);
+  };
+  
+  const handleDialogContinue = () => {
+    setShowResultDialog(false);
+    endRound(isSolutionCorrect);
+  };
+
   const handleFinish = useCallback(() => {
     alert('Time is up!');
-    handleSubmit();
-  }, [handleSubmit]);
+    endRound(false);
+  }, [endRound]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
@@ -67,10 +89,10 @@ export function DebuggingView() {
         alert(
           'You have reached the maximum number of warnings. Your test will be submitted automatically.'
         );
-        handleSubmit();
+        endRound(false);
       }
     },
-    [handleSubmit]
+    [endRound]
   );
 
   useAntiCheat(handleWarning);
@@ -312,7 +334,8 @@ export function DebuggingView() {
           </div>
           <div className="flex-1 grid grid-rows-2 gap-4">
             <CodeEditor
-              initialCode={problem.buggyCode}
+              code={code}
+              onCodeChange={setCode}
               language={problem.language}
             />
             <Card className="flex flex-col">
@@ -330,6 +353,22 @@ export function DebuggingView() {
           </div>
         </div>
       </div>
+      <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isSolutionCorrect ? "Correct!" : "Incorrect"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isSolutionCorrect 
+                ? "Congratulations! You've fixed the bug. You will now proceed to the score screen."
+                : "Your solution is incorrect. The round is now over. You will now proceed to the score screen."
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleDialogContinue}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
