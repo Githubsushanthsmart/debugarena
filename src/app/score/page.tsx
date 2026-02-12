@@ -9,7 +9,7 @@ import type { Team } from '@/lib/types';
 
 export default function ScorePage() {
   const router = useRouter();
-  const [score, setScore] = useState<number | null>(null);
+  const [roundScore, setRoundScore] = useState<number | null>(null);
   const [team, setTeam] = useState<Team | null>(null);
 
   useEffect(() => {
@@ -17,14 +17,14 @@ export default function ScorePage() {
     const teamDataStr = localStorage.getItem('currentTeam');
 
     if (lastScoreStr && teamDataStr) {
-      setScore(JSON.parse(lastScoreStr));
+      setRoundScore(JSON.parse(lastScoreStr));
       setTeam(JSON.parse(teamDataStr));
     } else {
       router.replace('/dashboard');
     }
   }, [router]);
 
-  if (score === null || !team) {
+  if (roundScore === null || !team) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-background">
             <p>Loading score...</p>
@@ -34,7 +34,7 @@ export default function ScorePage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
-        <Card className="w-full max-w-lg text-center animate-fade-in">
+        <Card className="w-full max-w-2xl text-center animate-fade-in">
             <CardHeader>
                 <div className="flex justify-center mb-4">
                     <Trophy className="h-16 w-16 text-yellow-400" />
@@ -43,9 +43,17 @@ export default function ScorePage() {
                 <CardDescription>Congratulations, {team.name}!</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-muted-foreground text-lg">You Scored</p>
-                <p className="text-8xl font-bold my-4 text-primary">{score}</p>
-                <Button onClick={() => router.push('/dashboard')} className="w-full mt-8">
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p className="text-muted-foreground text-xl">Round Score</p>
+                        <p className="text-8xl font-bold my-4 text-primary">{roundScore}</p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground text-xl">Total Score</p>
+                        <p className="text-8xl font-bold my-4 text-accent">{team.score}</p>
+                    </div>
+                </div>
+                <Button onClick={() => router.push('/dashboard')} className="w-full mt-12">
                     Back to Dashboard
                 </Button>
             </CardContent>

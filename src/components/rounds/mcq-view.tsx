@@ -10,7 +10,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { mockMcqSetA, mockMcqSetB } from '@/lib/mock-data';
-import type { MCQ } from '@/lib/types';
+import type { MCQ, Team } from '@/lib/types';
 import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
@@ -41,15 +41,19 @@ export function McqView() {
 
     const teamData = localStorage.getItem('currentTeam');
     if (teamData) {
-      const currentTeam = JSON.parse(teamData);
+      const currentTeam: Team = JSON.parse(teamData);
       const leaderboardStr = localStorage.getItem('liveLeaderboard');
-      let leaderboard: MCQ[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
+      let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
       
       const teamIndex = leaderboard.findIndex((t: any) => t.id === currentTeam.id);
       if (teamIndex !== -1) {
-        leaderboard[teamIndex] = { ...leaderboard[teamIndex], score: score };
+        const newTotalScore = leaderboard[teamIndex].score + score;
+        leaderboard[teamIndex].score = newTotalScore;
+        
+        const updatedTeam = { ...currentTeam, score: newTotalScore };
+        localStorage.setItem('currentTeam', JSON.stringify(updatedTeam));
       }
-      localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+       localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
     }
 
 
