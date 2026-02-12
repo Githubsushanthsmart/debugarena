@@ -2,11 +2,9 @@
 
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { RoundCard } from '@/components/dashboard/round-card';
-import { Button } from '@/components/ui/button';
-import { BarChart } from 'lucide-react';
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { currentTeam } from '@/lib/mock-data';
+import { useRouter } from 'next/navigation';
+import type { Team } from '@/lib/types';
 
 const initialRounds = [
   {
@@ -36,34 +34,51 @@ const initialRounds = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [rounds, setRounds] = useState(initialRounds);
+  const [team, setTeam] = useState<Team | null>(null);
 
   useEffect(() => {
+    const teamData = localStorage.getItem('currentTeam');
+    if (!teamData) {
+      router.replace('/register');
+      return;
+    }
+    setTeam(JSON.parse(teamData));
+
     const completedRoundsStr = localStorage.getItem('completedRounds');
-    const completedRounds = completedRoundsStr ? JSON.parse(completedRoundsStr) : [];
-    
+    const completedRounds = completedRoundsStr
+      ? JSON.parse(completedRoundsStr)
+      : [];
+
     const newRounds = initialRounds.map((r) => {
       if (completedRounds.includes(String(r.round))) {
         return { ...r, status: 'Completed' };
       }
-      if (r.round === 1 || completedRounds.includes(String(r.round - 1))) {
-        // Unlock current round if previous is completed, or if it's the first round.
-        if ( !completedRounds.includes(String(r.round))) {
-            return { ...r, status: 'Unlocked' };
-        }
+      // Unlock current round if previous is completed, or if it's the first round.
+      if (
+        r.round === 1 ||
+        (completedRounds.includes(String(r.round - 1)) &&
+          !completedRounds.includes(String(r.round)))
+      ) {
+        return { ...r, status: 'Unlocked' };
       }
       return r;
     });
 
     setRounds(newRounds);
-  }, []);
+  }, [router]);
+
+  if (!team) {
+    return null; // or a loading spinner
+  }
 
   return (
     <PageWrapper>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-headline font-bold">
-            Welcome, {currentTeam.name}!
+            Welcome, {team.name}!
           </h1>
           <p className="text-muted-foreground">
             The competition is live. Choose a round to begin.

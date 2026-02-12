@@ -5,6 +5,7 @@ export type Team = {
   college: string;
   score: number;
   timeTaken: string; // e.g., "01:23:45"
+  members?: string[];
 };
 
 export type MCQ = {
