@@ -16,10 +16,12 @@ import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { McqSetSelector } from './mcq-set-selector';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '../ui/scroll-area';
 
 export function McqView() {
   const router = useRouter();
   const { toast } = useToast();
+  const [rulesAccepted, setRulesAccepted] = useState(false);
   const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
 
   const questions: MCQ[] = useMemo(() => {
@@ -98,18 +100,94 @@ export function McqView() {
     setAnswers({ ...answers, [questions[currentQuestionIndex].id]: value });
   };
 
+  if (!rulesAccepted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
+        <Card className="w-full max-w-4xl animate-fade-in">
+          <CardHeader>
+            <CardTitle className="font-headline text-3xl text-center">
+              MCQ Round – Official Rules & Guidelines
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[60vh] pr-6">
+              <div className="prose prose-invert max-w-none font-body text-muted-foreground">
+                <h3>1. Time Limit Rule</h3>
+                <p>
+                  <strong>Rule:</strong> Each team will be given 15 minutes to
+                  answer 20 multiple-choice questions.
+                </p>
+                <p>
+                  <strong>Why?</strong> Tests quick thinking and fundamental knowledge.
+                </p>
+
+                <hr />
+
+                <h3>2. No Internet / No AI Rule</h3>
+                <p>
+                  <strong>Rule:</strong> Participants are not allowed to use any external resources. This includes:
+                </p>
+                <ul>
+                  <li>Internet searches (Google, etc.)</li>
+                  <li>ChatGPT or any other AI tools</li>
+                  <li>Collaboration with other teams</li>
+                </ul>
+                <p>
+                  <strong>Why?</strong> Ensures a fair and individual assessment of knowledge.
+                </p>
+
+                <hr />
+
+                <h3>3. One Attempt Per Question</h3>
+                <p>
+                  <strong>Rule:</strong> Once you move to the next question, you cannot go back and change your answer.
+                </p>
+                <p>
+                  <strong>Why?</strong> This encourages careful consideration of each question before answering.
+                </p>
+
+                <hr />
+
+                <h3>4. Scoring Rule</h3>
+                <p>
+                  <strong>Rule:</strong> Each correct answer will award your team one point. There are no negative marks for incorrect answers.
+                </p>
+
+                <hr />
+
+                <h3>5. Professional Conduct</h3>
+                <ul>
+                  <li>
+                    No plagiarism.
+                  </li>
+                  <li>Phones must be kept aside and silent.</li>
+                  <li>Any misconduct will lead to immediate disqualification from the competition.</li>
+                </ul>
+                <p>
+                  <strong>Switching tabs or windows will result in a warning. Three warnings will lead to automatic submission.</strong>
+                </p>
+              </div>
+            </ScrollArea>
+            <Button
+              onClick={() => setRulesAccepted(true)}
+              className="w-full mt-8"
+            >
+              I Understand and Agree, Start Round
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!selectedSet) {
     return (
       <div className="flex flex-col h-screen">
-        <RoundHeader
-          round={1}
-          title="MCQ Round"
-          countdownDuration={15 * 60}
-          onFinish={() => {
-            alert('Time is up!');
-            router.push('/dashboard');
-          }}
-        />
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 max-w-screen-2xl items-center px-4 justify-center">
+                 <h1 className="text-lg font-semibold font-headline">MCQ Round</h1>
+            </div>
+        </header>
         <McqSetSelector onSelectSet={setSelectedSet} />
       </div>
     );
