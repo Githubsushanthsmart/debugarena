@@ -9,33 +9,49 @@ import {
 } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { mockMcqSetA, mockMcqSetB, currentTeam } from '@/lib/mock-data';
+import { mockMcqSetA, mockMcqSetB } from '@/lib/mock-data';
 import type { MCQ } from '@/lib/types';
 import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { McqSetSelector } from './mcq-set-selector';
 
 export function McqView() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
 
-  const questions = useMemo(() => {
-    // A simple way to assign sets. Odd IDs get Set A, Even IDs get Set B.
-    const teamId = parseInt(currentTeam.id, 10);
-    return teamId % 2 !== 0 ? mockMcqSetA : mockMcqSetB;
-  }, []);
+  const questions: MCQ[] = useMemo(() => {
+    if (selectedSet === 'A') return mockMcqSetA;
+    if (selectedSet === 'B') return mockMcqSetB;
+    return [];
+  }, [selectedSet]);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const handleSubmit = useCallback(() => {
-    alert('Submitting answers...');
+    let score = 0;
+    questions.forEach((q) => {
+      if (answers[q.id] && parseInt(answers[q.id], 10) === q.correctAnswerIndex) {
+        score++;
+      }
+    });
+
+    toast({
+      title: 'MCQ Round Completed!',
+      description: `You scored ${score} out of ${questions.length}.`,
+      duration: 5000,
+    });
+
     const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
     if (!completedRounds.includes('1')) {
         completedRounds.push('1');
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
     router.push('/dashboard');
-  }, [router]);
+  }, [router, answers, questions, toast]);
 
   const handleFinish = useCallback(() => {
     alert('Time is up! Submitting your answers.');
@@ -64,6 +80,23 @@ export function McqView() {
     setAnswers({ ...answers, [questions[currentQuestionIndex].id]: value });
   };
 
+  if (!selectedSet) {
+    return (
+      <div className="flex flex-col h-screen">
+        <RoundHeader
+          round={1}
+          title="MCQ Round"
+          countdownDuration={20 * 60}
+          onFinish={() => {
+            alert('Time is up!');
+            router.push('/dashboard');
+          }}
+        />
+        <McqSetSelector onSelectSet={setSelectedSet} />
+      </div>
+    );
+  }
+
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -71,7 +104,7 @@ export function McqView() {
     <div className="flex flex-col h-screen">
       <RoundHeader
         round={1}
-        title="MCQ Round"
+        title={`MCQ Round - Set ${selectedSet}`}
         countdownDuration={20 * 60}
         onFinish={handleFinish}
       />
