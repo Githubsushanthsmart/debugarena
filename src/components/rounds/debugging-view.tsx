@@ -16,13 +16,36 @@ import { Play, Send } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
+import type { Team } from '@/lib/types';
 
 export function DebuggingView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
 
   const handleSubmit = useCallback(() => {
-    alert('Submitting solution...');
+    // This is a mock submission. In a real app, you'd send the code to a server for evaluation.
+    const score = Math.floor(Math.random() * 50) + 50; // Mock score
+    localStorage.setItem('lastRoundScore', JSON.stringify(score));
+
+    // Update total score
+    const teamData = localStorage.getItem('currentTeam');
+    if (teamData) {
+      const currentTeam: Team = JSON.parse(teamData);
+      const newTotalScore = (currentTeam.score || 0) + score;
+      
+      const leaderboardStr = localStorage.getItem('liveLeaderboard');
+      let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
+      
+      const teamIndex = leaderboard.findIndex(t => t.id === currentTeam.id);
+      if (teamIndex !== -1) {
+        leaderboard[teamIndex].score = newTotalScore;
+      }
+      
+      localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+      localStorage.setItem('currentTeam', JSON.stringify({ ...currentTeam, score: newTotalScore }));
+    }
+
+
     const completedRounds = JSON.parse(
       localStorage.getItem('completedRounds') || '[]'
     );
@@ -30,7 +53,7 @@ export function DebuggingView() {
       completedRounds.push('2');
       localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
-    router.push('/dashboard');
+    router.push('/score');
   }, [router]);
 
   const handleFinish = useCallback(() => {
@@ -68,7 +91,7 @@ export function DebuggingView() {
               <div className="prose prose-invert max-w-none font-body text-muted-foreground">
                 <h3>1. Time Limit Rule</h3>
                 <p>
-                  <strong>Rule:</strong> Each team will be given 60–90 minutes to
+                  <strong>Rule:</strong> Each team will be given 15 minutes to
                   debug the problems.
                 </p>
                 <h4>Details:</h4>
@@ -241,7 +264,7 @@ export function DebuggingView() {
       <RoundHeader
         round={2}
         title="Debugging Round"
-        countdownDuration={60 * 60}
+        countdownDuration={15 * 60}
         onFinish={handleFinish}
       />
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-auto">
