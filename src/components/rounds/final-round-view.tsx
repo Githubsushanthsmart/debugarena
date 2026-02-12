@@ -52,7 +52,7 @@ export function FinalRoundView() {
     <div className="flex flex-col h-screen font-code">
       <RoundHeader
         round={3}
-        title="CodeTantra Final Round"
+        title="Final Round"
         countdownDuration={25 * 60}
         onFinish={handleFinish}
       />

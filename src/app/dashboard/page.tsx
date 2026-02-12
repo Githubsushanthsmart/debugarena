@@ -25,7 +25,7 @@ const initialRounds = [
   },
   {
     round: 3,
-    title: 'CodeTantra Final',
+    title: 'Final Round',
     description: '25 minutes to solve the final coding challenge.',
     status: 'Locked',
     icon: 'Trophy',
