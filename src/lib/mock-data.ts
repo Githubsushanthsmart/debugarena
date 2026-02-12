@@ -113,7 +113,7 @@ export const mockMcqSetA: MCQ[] = [
     id: 'mcq-a-17',
     question: 'function f(n): \n   if n <= 1: return 1 \n   return f(n-1) + f(n-2) \n\nprint(f(4)) Output?',
     options: ['3', '5', '8', '13'],
-    correctAnswerIndex: 1,
+    correctAnswerIndex: 2,
   },
   {
     id: 'mcq-a-18',
@@ -125,13 +125,13 @@ export const mockMcqSetA: MCQ[] = [
     id: 'mcq-a-19',
     question: 'enqueue(5) \nenqueue(10) \nenqueue(15) \ndequeue() \nenqueue(20) \ndequeue() \nfront() \nOutput?',
     options: ['5', '10', '15', '20'],
-    correctAnswerIndex: 2,
+    correctAnswerIndex: 1,
   },
   {
     id: 'mcq-a-20',
     question: 'A binary tree has 127 nodes and is perfectly full. Height of the tree (root at level 1)?',
     options: ['6', '7', '8', '127'],
-    correctAnswerIndex: 1,
+    correctAnswerIndex: 2,
   },
 ];
 
