@@ -15,9 +15,11 @@ import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { McqSetSelector } from './mcq-set-selector';
+import { useToast } from '@/hooks/use-toast';
 
 export function McqView() {
   const router = useRouter();
+  const { toast } = useToast();
   const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
 
   const questions: MCQ[] = useMemo(() => {
@@ -35,6 +37,11 @@ export function McqView() {
       if (answers[q.id] && parseInt(answers[q.id], 10) === q.correctAnswerIndex) {
         score++;
       }
+    });
+
+    toast({
+      title: "Round Complete!",
+      description: `You scored ${score} out of ${questions.length}.`,
     });
 
     localStorage.setItem('lastRoundScore', JSON.stringify(score));
@@ -63,7 +70,7 @@ export function McqView() {
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
     router.push('/score');
-  }, [router, answers, questions]);
+  }, [router, answers, questions, toast]);
 
   const handleFinish = useCallback(() => {
     alert('Time is up! Submitting your answers.');
@@ -97,7 +104,7 @@ export function McqView() {
         <RoundHeader
           round={1}
           title="MCQ Round"
-          countdownDuration={20 * 60}
+          countdownDuration={15 * 60}
           onFinish={() => {
             alert('Time is up!');
             router.push('/dashboard');
@@ -116,7 +123,7 @@ export function McqView() {
       <RoundHeader
         round={1}
         title={`MCQ Round - Set ${selectedSet}`}
-        countdownDuration={20 * 60}
+        countdownDuration={15 * 60}
         onFinish={handleFinish}
       />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-gray-900/50 to-background">
