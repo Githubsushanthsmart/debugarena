@@ -18,11 +18,12 @@ import type { Team } from '@/lib/types';
 export default function RegisterPage() {
   const router = useRouter();
   const [teamName, setTeamName] = useState('');
+  const [college, setCollege] = useState('');
   const [members, setMembers] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (teamName.trim() && members.trim()) {
+    if (teamName.trim() && members.trim() && college.trim()) {
       const teamInfo: Team = {
         id: teamName.toLowerCase().replace(/\s+/g, '-'), // generate an id
         name: teamName.trim(),
@@ -30,7 +31,7 @@ export default function RegisterPage() {
           .trim()
           .split(',')
           .map((m) => m.trim()),
-        college: 'Your College', // Placeholder
+        college: college.trim(),
         rank: 0,
         score: 0,
         timeTaken: '00:00:00',
@@ -76,6 +77,16 @@ export default function RegisterPage() {
                 placeholder="e.g., The Bug Slayers"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
+                required
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="college">College</Label>
+              <Input
+                id="college"
+                placeholder="e.g., Institute of Technology"
+                value={college}
+                onChange={(e) => setCollege(e.target.value)}
                 required
               />
             </div>
