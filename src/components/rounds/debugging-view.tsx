@@ -38,10 +38,34 @@ export function DebuggingView() {
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
 
   const handleLanguageSelect = (lang: 'python' | 'java') => {
-    const problems = mockDebuggingProblems.filter((p) => p.language === lang);
-    const randomProblem = problems[Math.floor(Math.random() * problems.length)];
-    setProblem(randomProblem);
-    setCode(randomProblem.buggyCode);
+    // Get all problems for the selected language
+    const allProblemsForLang = mockDebuggingProblems.filter((p) => p.language === lang);
+
+    // Get the list of problem IDs that have already been assigned
+    const assignedProblemIdsStr = localStorage.getItem('assignedDebugProblems');
+    let assignedProblemIds: string[] = assignedProblemIdsStr ? JSON.parse(assignedProblemIdsStr) : [];
+
+    // Filter out the problems that have already been assigned
+    let unassignedProblems = allProblemsForLang.filter(p => !assignedProblemIds.includes(p.id));
+
+    // If all problems for the language have been assigned, reset the pool and start over
+    if (unassignedProblems.length === 0) {
+      unassignedProblems = allProblemsForLang;
+      assignedProblemIds = []; // Reset the tracking
+    }
+    
+    // Select a random problem from the list of unassigned problems
+    const randomProblem = unassignedProblems[Math.floor(Math.random() * unassignedProblems.length)];
+    
+    // Add the selected problem's ID to the list of assigned problems and save to localStorage
+    if (randomProblem) {
+      assignedProblemIds.push(randomProblem.id);
+      localStorage.setItem('assignedDebugProblems', JSON.stringify(assignedProblemIds));
+
+      // Set the current problem and the initial code for the editor
+      setProblem(randomProblem);
+      setCode(randomProblem.buggyCode);
+    }
   };
 
   const endRound = useCallback(
@@ -412,7 +436,7 @@ export function DebuggingView() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Submission Received
+              {isSolutionCorrect ? 'Correct Solution!' : 'Incorrect Solution'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               Your solution has been submitted. The round is now over. You will be redirected back to the dashboard.
