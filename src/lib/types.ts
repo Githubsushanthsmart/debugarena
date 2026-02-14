@@ -31,4 +31,5 @@ export type FinalProblem = {
   problemStatement: string;
   buggyCode: string;
   solutionCode: string;
+  buggyOutput?: string;
 };

@@ -351,7 +351,6 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
             third = n
     return third`,
     solutionCode: `def third_max(nums):
-    first = second = third = float('-inf')
     nums = sorted(list(set(nums)), reverse=True)
     if len(nums) < 3:
         return nums[0]
@@ -660,5 +659,6 @@ You are given a buggy function that is intended to check if a given string is a 
     return s == reversed_s`,
     solutionCode: `def is_palindrome(s):
     s = s.lower().replace(' ', '')
-    return s == s[::-1]`
+    return s == s[::-1]`,
+    buggyOutput: "Error: 'str' object has no attribute 'reverse'. The reverse() method is for lists, not strings."
 };

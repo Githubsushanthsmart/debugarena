@@ -34,10 +34,34 @@ export function FinalRoundView() {
   const router = useRouter();
   const { toast } = useToast();
   const [code, setCode] = useState(mockFinalProblem.buggyCode);
+  const [output, setOutput] = useState(
+    'Click "Run Code" to see the output here.'
+  );
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
 
   const problem = mockFinalProblem;
+
+  const handleRunCode = () => {
+    if (!problem) return;
+
+    const normalizedUserCode = code.replace(/\s+/g, '');
+    const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
+    const normalizedSolutionCode = problem.solutionCode.replace(/\s+/g, '');
+
+    if (normalizedUserCode === normalizedBuggyCode) {
+      setOutput(
+        problem.buggyOutput ||
+          'The initial code has bugs. Running it produces an error or incorrect output.'
+      );
+    } else if (normalizedUserCode === normalizedSolutionCode) {
+      setOutput('Success! The code seems to be correct and runs without errors.');
+    } else {
+      setOutput(
+        'Executing your modified code...\n\nThis is a simulation. If the code is still buggy, it may produce an incorrect output. Keep debugging!'
+      );
+    }
+  };
 
   const endRound = useCallback(
     (isCorrect: boolean) => {
@@ -341,7 +365,7 @@ export function FinalRoundView() {
               </SelectContent>
             </Select>
             <div className="flex-1" />
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={handleRunCode}>
               <Play className="mr-2 h-4 w-4" /> Run Code
             </Button>
             <Button
@@ -364,8 +388,8 @@ export function FinalRoundView() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 bg-background rounded-b-md p-4 overflow-auto">
-                <pre className="text-sm text-muted-foreground">
-                  Click "Run Code" to see the output here.
+                <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {output}
                 </pre>
               </CardContent>
             </Card>
