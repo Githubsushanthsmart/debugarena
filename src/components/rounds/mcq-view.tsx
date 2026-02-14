@@ -43,10 +43,8 @@ export function McqView() {
 
     toast({
       title: "Round Complete!",
-      description: `You scored ${score} out of ${questions.length}.`,
+      description: `Your answers have been submitted.`,
     });
-
-    localStorage.setItem('lastRoundScore', JSON.stringify(score));
 
     const teamData = localStorage.getItem('currentTeam');
     if (teamData) {
@@ -71,20 +69,20 @@ export function McqView() {
         completedRounds.push('1');
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
-    router.push('/score');
+    router.push('/dashboard');
   }, [router, answers, questions, toast]);
 
   const handleFinish = useCallback(() => {
-    alert('Time is up! Submitting your answers.');
+    toast({ title: "Time's Up!", description: 'Your answers are being submitted automatically.' });
     handleSubmit();
-  }, [handleSubmit]);
+  }, [handleSubmit, toast]);
   
   const handleWarning = useCallback((warningCount: number) => {
     if (warningCount >= 3) {
-      alert('You have reached the maximum number of warnings. Your test will be submitted automatically.');
+      toast({ variant: 'destructive', title: 'Disqualified', description: 'Maximum warnings reached. Your test is being submitted.' });
       handleSubmit();
     }
-  }, [handleSubmit]);
+  }, [handleSubmit, toast]);
 
   useAntiCheat(handleWarning);
 

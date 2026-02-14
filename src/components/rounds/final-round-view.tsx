@@ -17,13 +17,18 @@ import { Play, Send } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 export function FinalRoundView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSubmit = useCallback(() => {
-    alert('Submitting final solution...');
+    toast({
+        title: "Final Round Complete!",
+        description: "Your final submission has been recorded. The competition is now over."
+    });
     const completedRounds = JSON.parse(
       localStorage.getItem('completedRounds') || '[]'
     );
@@ -31,24 +36,22 @@ export function FinalRoundView() {
       completedRounds.push('3');
       localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
-    router.push('/leaderboard');
-  }, [router]);
+    router.push('/dashboard');
+  }, [router, toast]);
 
   const handleFinish = useCallback(() => {
-    alert('Time is up!');
+    toast({ title: "Time's Up!", description: "Submitting your final solution automatically."});
     handleSubmit();
-  }, [handleSubmit]);
+  }, [handleSubmit, toast]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
       if (warningCount >= 3) {
-        alert(
-          'You have reached the maximum number of warnings. Your test will be submitted automatically.'
-        );
+        toast({ variant: 'destructive', title: 'Disqualified', description: 'Maximum warnings reached. Your final submission is being recorded.'});
         handleSubmit();
       }
     },
-    [handleSubmit]
+    [handleSubmit, toast]
   );
 
   useAntiCheat(handleWarning);

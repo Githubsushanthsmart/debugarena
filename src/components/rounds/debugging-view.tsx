@@ -26,10 +26,12 @@ import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import type { Team, DebuggingProblem } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export function DebuggingView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
   const [problem, setProblem] = useState<DebuggingProblem | null>(null);
   const [code, setCode] = useState('');
   const [showResultDialog, setShowResultDialog] = useState(false);
@@ -45,7 +47,6 @@ export function DebuggingView() {
   const endRound = useCallback(
     (isCorrect: boolean) => {
       const score = isCorrect ? 100 : 0; // 100 points for correct, 0 for incorrect/timeout/cheating
-      localStorage.setItem('lastRoundScore', JSON.stringify(score));
 
       const teamData = localStorage.getItem('currentTeam');
       if (teamData) {
@@ -76,7 +77,7 @@ export function DebuggingView() {
         completedRounds.push('2');
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
       }
-      router.push('/score');
+      router.push('/dashboard');
     },
     [router]
   );
@@ -96,20 +97,22 @@ export function DebuggingView() {
   };
 
   const handleFinish = useCallback(() => {
-    alert('Time is up!');
+    toast({ title: "Time's Up!", description: 'Your solution is being submitted automatically.' });
     endRound(false);
-  }, [endRound]);
+  }, [endRound, toast]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
       if (warningCount >= 3) {
-        alert(
-          'You have reached the maximum number of warnings. Your test will be submitted automatically.'
-        );
+        toast({
+          variant: 'destructive',
+          title: 'Disqualified',
+          description: 'Maximum warnings reached. Your test is being submitted.',
+        });
         endRound(false);
       }
     },
-    [endRound]
+    [endRound, toast]
   );
 
   useAntiCheat(handleWarning);
@@ -409,17 +412,15 @@ export function DebuggingView() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {isSolutionCorrect ? 'Correct!' : 'Incorrect'}
+              Submission Received
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {isSolutionCorrect
-                ? "Congratulations! You've fixed the bug. You will now proceed to the score screen."
-                : 'Your solution is incorrect. The round is now over. You will now proceed to the score screen.'}
+              Your solution has been submitted. The round is now over. You will be redirected back to the dashboard.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={handleDialogContinue}>
-              Continue
+              Continue to Dashboard
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

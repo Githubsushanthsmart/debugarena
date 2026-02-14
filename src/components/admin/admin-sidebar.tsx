@@ -9,6 +9,7 @@ import {
   SidebarTrigger,
   SidebarContent,
   useSidebar,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -17,22 +18,29 @@ import {
   Trophy,
   Code2,
   Settings,
+  LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const menuItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/mcqs', label: 'MCQs', icon: ListChecks },
   { href: '/admin/problems', label: 'Problems', icon: FileCode2 },
   { href: '/admin/rounds', label: 'Rounds', icon: Settings },
-  { href: '/admin/results', label: 'Leaderboard', icon: Trophy },
+  { href: '/admin/results', label: 'Live Leaderboard', icon: Trophy },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { open } = useSidebar();
   
+  const handleLogout = () => {
+    localStorage.removeItem('isAdminAuthenticated');
+    router.replace('/admin/login');
+  };
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -61,6 +69,19 @@ export function AdminSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
+       <SidebarFooter>
+         <SidebarMenu>
+            <SidebarMenuItem>
+                 <SidebarMenuButton
+                  onClick={handleLogout}
+                  tooltip={{ children: "Logout" }}
+                >
+                  <LogOut />
+                  <span>Logout</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+         </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
