@@ -329,7 +329,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
             high = mid - 1
         else:
             return mid
-    return -1`
+    return -1`,
+    buggyOutput: 'Error: IndexError: list index out of range. The loop condition or array access is incorrect.'
   },
   {
     id: 'dbg-py-2',
@@ -355,7 +356,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
     if len(nums) < 3:
         return nums[0]
     else:
-        return nums[2]`
+        return nums[2]`,
+    buggyOutput: 'Incorrect output. The logic does not handle duplicate numbers correctly, leading to a wrong third maximum.'
   },
   {
     id: 'dbg-py-3',
@@ -377,7 +379,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         if node.val <= low or node.val >= high:
             return False
         return helper(node.left, low, node.val) and helper(node.right, node.val, high)
-    return helper(root, float('-inf'), float('inf'))`
+    return helper(root, float('-inf'), float('inf'))`,
+    buggyOutput: 'Incorrect output. The recursive check uses "or" instead of "and", allowing invalid BSTs to pass.'
   },
   // Java
   {
@@ -406,7 +409,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
             }
         }
     }
-}`
+}`,
+    buggyOutput: 'Error: java.lang.ArrayIndexOutOfBoundsException. Check the inner loop boundaries.'
   },
   {
     id: 'dbg-java-2',
@@ -438,7 +442,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         arr[min_idx] = arr[i];
         arr[i] = temp;
     }
-}`
+}`,
+    buggyOutput: 'Error: java.lang.ArrayIndexOutOfBoundsException. The "min" variable stores a value, but is used as an index.'
   },
   {
     id: 'dbg-java-3',
@@ -466,7 +471,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         }
         arr[j+1] = key;
     }
-}`
+}`,
+    buggyOutput: 'Error: Infinite loop detected. The "j" variable is incremented instead of decremented in the while loop.'
   },
   {
     id: 'dbg-java-4',
@@ -519,7 +525,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         j++;
         k++;
     }
-}`
+}`,
+    buggyOutput: 'Incorrect Output. The temporary arrays L and R are not populated with data from the main array before merging.'
   },
   {
     id: 'dbg-java-5',
@@ -554,7 +561,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
     arr[i+1] = arr[high];
     arr[high] = temp;
     return (i+1);
-}`
+}`,
+    buggyOutput: 'Incorrect Output. The partition logic is flawed, leading to an improperly sorted array.'
   },
   {
     id: 'dbg-java-6',
@@ -585,7 +593,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         arr[largest]=temp;
         heapify(arr, n, largest);
     }
-}`
+}`,
+    buggyOutput: 'Incorrect Output. The heapify function is missing the recursive call to heapify the affected subtree.'
   },
     {
     id: 'dbg-java-7',
@@ -620,7 +629,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         }
     }
     return arr;
-}`
+}`,
+    buggyOutput: 'Error: java.lang.ArrayIndexOutOfBoundsException. The maximum value in the array is not calculated correctly, leading to an incorrectly sized count array.'
   }
 ];
 

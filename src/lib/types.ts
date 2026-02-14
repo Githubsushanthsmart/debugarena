@@ -22,6 +22,7 @@ export type DebuggingProblem = {
   buggyCode: string;
   description: string;
   solutionCode: string;
+  buggyOutput?: string;
 };
 
 export type FinalProblem = {
