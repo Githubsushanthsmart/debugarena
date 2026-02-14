@@ -19,6 +19,7 @@ import {
   Code2,
   Settings,
   LogOut,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -29,6 +30,7 @@ const menuItems = [
   { href: '/admin/problems', label: 'Problems', icon: FileCode2 },
   { href: '/admin/rounds', label: 'Rounds', icon: Settings },
   { href: '/admin/results', label: 'Live Leaderboard', icon: Trophy },
+  { href: '/admin/disqualified', label: 'Disqualified', icon: AlertTriangle },
 ];
 
 export function AdminSidebar() {

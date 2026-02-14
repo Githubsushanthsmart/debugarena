@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import type { Team } from '@/lib/types';
 
 export const useAntiCheat = (
   onWarning: (warningCount: number) => void,
@@ -9,6 +10,29 @@ export const useAntiCheat = (
   const { toast } = useToast();
   const warningCount = useRef(0);
   const isEnabled = useRef(true);
+
+  const handleDisqualification = useCallback(() => {
+    const teamDataStr = localStorage.getItem('currentTeam');
+    if (!teamDataStr) return;
+
+    const team: Team = JSON.parse(teamDataStr);
+    
+    // Add to disqualified list
+    const disqualifiedTeamsStr = localStorage.getItem('disqualifiedTeams');
+    const disqualifiedTeams: Team[] = disqualifiedTeamsStr ? JSON.parse(disqualifiedTeamsStr) : [];
+    if (!disqualifiedTeams.some(t => t.id === team.id)) {
+        disqualifiedTeams.push(team);
+        localStorage.setItem('disqualifiedTeams', JSON.stringify(disqualifiedTeams));
+    }
+
+    // Remove from live leaderboard
+    const leaderboardStr = localStorage.getItem('liveLeaderboard');
+    if (leaderboardStr) {
+      let leaderboard: Team[] = JSON.parse(leaderboardStr);
+      leaderboard = leaderboard.filter(t => t.id !== team.id);
+      localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+    }
+  }, []);
 
   const showWarning = useCallback((message: string) => {
     if (!isEnabled.current) return;
@@ -19,12 +43,15 @@ export const useAntiCheat = (
       title: `Warning ${warningCount.current}/${maxWarnings}`,
       description: message,
     });
-    onWarning(warningCount.current);
-
+    
     if (warningCount.current >= maxWarnings) {
         isEnabled.current = false;
+        handleDisqualification();
     }
-  }, [toast, maxWarnings, onWarning]);
+    
+    onWarning(warningCount.current);
+
+  }, [toast, maxWarnings, onWarning, handleDisqualification]);
 
 
   useEffect(() => {
