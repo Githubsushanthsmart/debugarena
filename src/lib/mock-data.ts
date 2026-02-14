@@ -351,19 +351,11 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
     return third`,
     solutionCode: `def third_max(nums):
     first = second = third = float('-inf')
-    for n in nums:
-        if n == first or n == second:
-            continue
-        if n > first:
-            third = second
-            second = first
-            first = n
-        elif n > second:
-            third = second
-            second = n
-        elif n > third:
-            third = n
-    return first if third == float('-inf') else third`
+    nums = sorted(list(set(nums)), reverse=True)
+    if len(nums) < 3:
+        return nums[0]
+    else:
+        return nums[2]`
   },
   {
     id: 'dbg-py-3',
@@ -655,5 +647,8 @@ You are given a buggy function that is intended to check if a given string is a 
     buggyCode: `def is_palindrome(s):
     s = s.lower().replace(' ', '')
     reversed_s = s.reverse()
-    return s == reversed_s`
+    return s == reversed_s`,
+    solutionCode: `def is_palindrome(s):
+    s = s.lower().replace(' ', '')
+    return s == s[::-1]`
 };

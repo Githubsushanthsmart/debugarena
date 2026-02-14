@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Team } from '@/lib/types';
-import { mockLeaderboard } from '@/lib/mock-data';
 
 export default function AdminResultsPage() {
   const [leaderboard, setLeaderboard] = useState<Team[]>([]);
@@ -12,8 +11,8 @@ export default function AdminResultsPage() {
   useEffect(() => {
     const getLeaderboardData = () => {
       const leaderboardStr = localStorage.getItem('liveLeaderboard');
-      // If no data, start with mock data. In a real app this would be an empty array.
-      const initialData: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : mockLeaderboard;
+      // Use an empty array if no data is present in localStorage
+      const initialData: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
       
       const sortedData = [...initialData].sort((a, b) => {
         if (b.score !== a.score) {
@@ -69,14 +68,22 @@ export default function AdminResultsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaderboard.map((team) => (
-                <TableRow key={team.id}>
-                  <TableCell className="font-medium">{team.rank}</TableCell>
-                  <TableCell>{team.name}</TableCell>
-                  <TableCell>{team.college}</TableCell>
-                  <TableCell>{team.score}</TableCell>
+              {leaderboard.length > 0 ? (
+                leaderboard.map((team) => (
+                  <TableRow key={team.id}>
+                    <TableCell className="font-medium">{team.rank}</TableCell>
+                    <TableCell>{team.name}</TableCell>
+                    <TableCell>{team.college}</TableCell>
+                    <TableCell>{team.score}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    No teams have registered yet.
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

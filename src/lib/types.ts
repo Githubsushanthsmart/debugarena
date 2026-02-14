@@ -29,4 +29,5 @@ export type FinalProblem = {
   title: string;
   problemStatement: string;
   buggyCode: string;
+  solutionCode: string;
 };

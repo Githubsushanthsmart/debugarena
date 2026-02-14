@@ -12,51 +12,102 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { mockFinalProblem } from '@/lib/mock-data';
 import { Play, Send } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import type { Team } from '@/lib/types';
 
 export function FinalRoundView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const [code, setCode] = useState(mockFinalProblem.buggyCode);
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
 
-  const handleSubmit = useCallback(() => {
-    toast({
-        title: "Final Round Complete!",
-        description: "Your final submission has been recorded. The competition is now over."
-    });
-    const completedRounds = JSON.parse(
-      localStorage.getItem('completedRounds') || '[]'
-    );
-    if (!completedRounds.includes('3')) {
-      completedRounds.push('3');
-      localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
-    }
-    router.push('/dashboard');
-  }, [router, toast]);
+  const problem = mockFinalProblem;
+
+  const endRound = useCallback(
+    (isCorrect: boolean) => {
+      // Final round could be worth more, e.g., 200 points
+      const score = isCorrect ? 200 : 0;
+
+      const teamData = localStorage.getItem('currentTeam');
+      if (teamData) {
+        const currentTeam: Team = JSON.parse(teamData);
+        const newTotalScore = (currentTeam.score || 0) + score;
+
+        const leaderboardStr = localStorage.getItem('liveLeaderboard');
+        let leaderboard: Team[] = leaderboardStr
+          ? JSON.parse(leaderboardStr)
+          : [];
+
+        const teamIndex = leaderboard.findIndex((t) => t.id === currentTeam.id);
+        if (teamIndex !== -1) {
+          leaderboard[teamIndex].score = newTotalScore;
+        }
+
+        localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
+        localStorage.setItem(
+          'currentTeam',
+          JSON.stringify({ ...currentTeam, score: newTotalScore })
+        );
+      }
+
+      const completedRounds = JSON.parse(
+        localStorage.getItem('completedRounds') || '[]'
+      );
+      if (!completedRounds.includes('3')) {
+        completedRounds.push('3');
+        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
+      }
+      router.push('/dashboard');
+    },
+    [router]
+  );
+  
+  const handleSubmit = () => {
+    // A simple way to check correctness is to remove all whitespace and compare.
+    const isCorrect =
+      code.replace(/\s+/g, '') === problem.solutionCode.replace(/\s+/g, '');
+    setIsSolutionCorrect(isCorrect);
+    setShowResultDialog(true);
+  };
+  
+  const handleDialogContinue = () => {
+    setShowResultDialog(false);
+    endRound(isSolutionCorrect);
+  };
 
   const handleFinish = useCallback(() => {
     toast({ title: "Time's Up!", description: "Submitting your final solution automatically."});
-    handleSubmit();
-  }, [handleSubmit, toast]);
+    endRound(false);
+  }, [endRound, toast]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
       if (warningCount >= 3) {
         toast({ variant: 'destructive', title: 'Disqualified', description: 'Maximum warnings reached. Your final submission is being recorded.'});
-        handleSubmit();
+        endRound(false);
       }
     },
-    [handleSubmit, toast]
+    [endRound, toast]
   );
 
   useAntiCheat(handleWarning);
 
-  const problem = mockFinalProblem;
 
   if (!rulesAccepted) {
     return (
@@ -280,7 +331,7 @@ export function FinalRoundView() {
         {/* Right Panel: Editor & Console */}
         <div className="flex flex-col gap-4 overflow-hidden">
           <div className="flex items-center gap-4">
-            <Select defaultValue="python">
+            <Select defaultValue="python" disabled>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select Language" />
               </SelectTrigger>
@@ -301,7 +352,11 @@ export function FinalRoundView() {
             </Button>
           </div>
           <div className="flex-1 grid grid-rows-2 gap-4 overflow-hidden">
-            <CodeEditor initialCode={problem.buggyCode} language="python" />
+            <CodeEditor
+              code={code}
+              onCodeChange={setCode}
+              language="python"
+            />
             <Card className="flex flex-col">
               <CardHeader>
                 <CardTitle className="font-headline text-lg">
@@ -317,6 +372,23 @@ export function FinalRoundView() {
           </div>
         </div>
       </div>
+       <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Submission Received
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Your solution has been submitted. The competition is now over. You will be redirected back to the dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleDialogContinue}>
+              Continue to Dashboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
