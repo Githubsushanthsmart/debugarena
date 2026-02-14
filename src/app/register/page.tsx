@@ -37,6 +37,7 @@ export default function RegisterPage() {
         timeTaken: '00:00:00',
       };
       localStorage.setItem('currentTeam', JSON.stringify(teamInfo));
+      localStorage.removeItem('completedRounds');
       
       const leaderboardStr = localStorage.getItem('liveLeaderboard');
       const leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
