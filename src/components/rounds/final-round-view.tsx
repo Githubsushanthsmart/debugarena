@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCallback, useState } from 'react';
@@ -46,20 +47,23 @@ export function FinalRoundView() {
   const handleRunCode = () => {
     if (!problem) return;
     setIsRunning(true);
-    setOutput('Compiling and running...');
+    setOutput('Compiling and running tests...');
 
-    // Reduced timeout for near-instant execution
+    // Simulate instant execution
     setTimeout(() => {
       const normalizedUserCode = code.replace(/\s+/g, '');
       const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
-      const normalizedSolutionCode = problem.solutionCode.replace(/\s+/g, '');
+      
+      // Basic check for the provided solution pattern
+      const hasProperNullCheck = code.includes('Integer') && code.includes('null');
+      const hasProperAssignment = code.includes('third = second') && code.includes('second = first') && code.includes('first = n');
 
       if (normalizedUserCode === normalizedBuggyCode) {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
-      } else if (normalizedUserCode === normalizedSolutionCode) {
-        setOutput('Success! The code passed all test cases.\n\nOutput: True');
+      } else if (hasProperNullCheck && hasProperAssignment) {
+        setOutput('Success! All test cases passed.\n\nTest Case 1: [3, 2, 1] -> Output: 1\nTest Case 2: [1, 2] -> Output: 2\nTest Case 3: [2, 2, 3, 1] -> Output: 1');
       } else {
-        setOutput('Runtime Error: Logical mismatch. Output does not match the expected result for the Palindrome check.');
+        setOutput('Compilation Error or Output Mismatch: The logic provided does not handle edge cases correctly. Please ensure you are handling distinct values and null comparisons properly.');
       }
       setIsRunning(false);
     }, 50);
@@ -95,15 +99,16 @@ export function FinalRoundView() {
   );
   
   const handleSubmit = () => {
-    const isCorrect = code.replace(/\s+/g, '') === problem.solutionCode.replace(/\s+/g, '');
+    // Correct if it has the key elements of the provided fix
+    const isCorrect = code.includes('Integer') && code.includes('null') && code.includes('third = second');
     setIsSolutionCorrect(isCorrect);
     setShowResultDialog(true);
   };
   
   const handleFinish = useCallback(() => {
     toast({ title: "Time's Up!", description: "Submitting your final solution automatically."});
-    endRound(false);
-  }, [endRound, toast]);
+    handleSubmit();
+  }, [handleSubmit, toast]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
@@ -130,6 +135,7 @@ export function FinalRoundView() {
                 <p><strong>Rule:</strong> You have 25 minutes to solve the final challenge.</p>
                 <p><strong>Switching tabs or windows will result in disqualification after 3 warnings.</strong></p>
                 <p>The final problem is worth 200 points.</p>
+                <p><strong>Language:</strong> Java</p>
               </div>
             </ScrollArea>
             <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">Start Final Round</Button>
@@ -149,7 +155,7 @@ export function FinalRoundView() {
             <ScrollArea className="h-full pr-4">
               <div className="prose prose-invert max-w-none font-body">
                 <div dangerouslySetInnerHTML={{ __html: problem.problemStatement.replace(/\n/g, '<br/>') }} />
-                <h3 className="font-headline">Buggy Code:</h3>
+                <h3 className="font-headline mt-4">Provided Buggy Code:</h3>
                 <div className="bg-background rounded-md p-4 text-sm border">
                   <pre><code>{problem.buggyCode}</code></pre>
                 </div>
@@ -160,9 +166,9 @@ export function FinalRoundView() {
 
         <div className="flex flex-col gap-4 overflow-hidden">
           <div className="flex items-center gap-4">
-            <Select defaultValue="python" disabled>
+            <Select defaultValue="java" disabled>
               <SelectTrigger className="w-[180px]"><SelectValue placeholder="Select Language" /></SelectTrigger>
-              <SelectContent><SelectItem value="python">Python</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="java">Java</SelectItem></SelectContent>
             </Select>
             <div className="flex-1" />
             <Button variant="secondary" onClick={handleRunCode} disabled={isRunning}>
@@ -173,7 +179,7 @@ export function FinalRoundView() {
             </Button>
           </div>
           <div className="flex-1 grid grid-rows-2 gap-4 overflow-hidden">
-            <CodeEditor code={code} onCodeChange={setCode} language="python" />
+            <CodeEditor code={code} onCodeChange={setCode} language="java" />
             <Card className="flex flex-col">
               <CardHeader><CardTitle className="font-headline text-lg">Output Console</CardTitle></CardHeader>
               <CardContent className="flex-1 bg-background rounded-b-md p-4 overflow-auto">

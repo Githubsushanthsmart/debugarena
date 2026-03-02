@@ -636,29 +636,63 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
 
 export const mockFinalProblem: FinalProblem = {
     id: 'fin-1',
-    title: 'Final Challenge: Palindrome Checker',
-    problemStatement: `A palindrome is a word, phrase, number, or other sequence of characters that reads the same backward as forward.
+    title: 'Final Challenge: Third Maximum Number',
+    problemStatement: `Given an integer array, return the third distinct maximum number. If it does not exist, return the maximum number.
 
 **Task:**
-You are given a buggy function that is intended to check if a given string is a palindrome. Your task is to fix the function so that it correctly identifies palindromes.
+The provided code is buggy and fails to correctly identify the third distinct maximum, especially when handling duplicate values or null initializations.
 
 **Requirements:**
-- The function should return \`True\` if the string is a palindrome and \`False\` otherwise.
-- The comparison should be case-insensitive.
-- Spaces should be ignored.
-- An empty string should be considered a palindrome.
+- Fix the logic to handle distinct maximums.
+- Return the absolute maximum if fewer than three distinct maximums exist.
+- Ensure the code handles large integer values correctly.
 
 **Example Input/Output:**
-- Input: "A man a plan a canal Panama" -> Output: \`True\`
-- Input: "hello" -> Output: \`False\`
-- Input: "racecar" -> Output: \`True\`
+- Input: \`[3, 2, 1]\` -> Output: \`1\`
+- Input: \`[1, 2]\` -> Output: \`2\`
+- Input: \`[2, 2, 3, 1]\` -> Output: \`1\`
 `,
-    buggyCode: `def is_palindrome(s):
-    s = s.lower().replace(' ', '')
-    reversed_s = s.reverse()
-    return s == reversed_s`,
-    solutionCode: `def is_palindrome(s):
-    s = s.lower().replace(' ', '')
-    return s == s[::-1]`,
-    buggyOutput: "Error: 'str' object has no attribute 'reverse'. The reverse() method is for lists, not strings."
+    buggyCode: `public class ThirdMax {
+    public static int thirdMax(int[] nums) {
+        int first = Integer.MIN_VALUE, second = Integer.MIN_VALUE, third = Integer.MIN_VALUE;
+        for (int n : nums) {
+            if (n > first) {
+                third = second;
+                second = first;
+                first = n;
+            } else if (n > second) {
+                third = second;
+                second = n;
+            } else if (n > third) {
+                third = n;
+            }
+        }
+        return (third == Integer.MIN_VALUE) ? first : third;
+    }
+}`,
+    solutionCode: `public class ThirdMax {
+    public static int thirdMax(int[] nums) {
+        Integer first = null, second = null, third = null;
+
+        for (int n : nums) {
+            if (n == first || (first != null && n == first.intValue()) || 
+                (second != null && n == second.intValue()) || 
+                (third != null && n == third.intValue())) continue;
+
+            if (first == null || n > first) {
+                third = second;
+                second = first;
+                first = n;
+            } else if (second == null || n > second) {
+                third = second;
+                second = n;
+            } else if (third == null || n > third) {
+                third = n;
+            }
+        }
+
+        return third == null ? first : third;
+    }
+}`,
+    buggyOutput: 'Error: Output mismatch. The logic fails to handle duplicates (e.g., [2, 2, 3, 1] returns 2 instead of 1) and does not correctly differentiate between the initial value and a real Integer.MIN_VALUE in the array.'
 };
