@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { mockMcqSetA } from "@/lib/mock-data";
+import { mockMcqSetA, mockMcqSetB } from "@/lib/mock-data";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminMcqsPage() {
+  const allMcqs = [
+    ...mockMcqSetA.map(q => ({ ...q, set: 'A' })),
+    ...mockMcqSetB.map(q => ({ ...q, set: 'B' }))
+  ];
+
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-8">
@@ -18,7 +24,7 @@ export default function AdminMcqsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Question Bank</CardTitle>
+          <CardTitle>Question Bank ({allMcqs.length} Questions)</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -30,10 +36,14 @@ export default function AdminMcqsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockMcqSetA.map((mcq) => (
+              {allMcqs.map((mcq) => (
                 <TableRow key={mcq.id}>
                   <TableCell className="font-medium max-w-lg truncate">{mcq.question}</TableCell>
-                  <TableCell>Set A</TableCell>
+                  <TableCell>
+                    <Badge variant={mcq.set === 'A' ? 'default' : 'secondary'}>
+                      Set {mcq.set}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
