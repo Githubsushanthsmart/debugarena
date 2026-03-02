@@ -4,17 +4,31 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Team } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDisqualifiedPage() {
   const [disqualifiedTeams, setDisqualifiedTeams] = useState<Team[]>([]);
+  const { toast } = useToast();
+
+  const getDisqualifiedData = () => {
+    const teamsStr = localStorage.getItem('disqualifiedTeams');
+    const teams: Team[] = teamsStr ? JSON.parse(teamsStr) : [];
+    setDisqualifiedTeams(teams);
+  };
 
   useEffect(() => {
-    const getDisqualifiedData = () => {
-      const teamsStr = localStorage.getItem('disqualifiedTeams');
-      const teams: Team[] = teamsStr ? JSON.parse(teamsStr) : [];
-      setDisqualifiedTeams(teams);
-    };
-
     getDisqualifiedData(); // Initial load
 
     const handleStorageChange = (event: StorageEvent) => {
@@ -31,11 +45,36 @@ export default function AdminDisqualifiedPage() {
     };
   }, []);
 
+  const handleClearDisqualified = () => {
+    localStorage.removeItem('disqualifiedTeams');
+    getDisqualifiedData();
+    toast({
+      title: "Disqualified List Cleared",
+      description: "All records of disqualified teams have been removed.",
+    });
+  };
 
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold font-headline">Disqualified Teams</h1>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+             <Button variant="destructive">Clear Disqualified</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clear Disqualified Teams?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove all teams from the disqualified list. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleClearDisqualified}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Card>
