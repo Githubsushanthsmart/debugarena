@@ -634,7 +634,8 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
 ];
 
 
-export const mockFinalProblem: FinalProblem = {
+export const mockFinalProblems: FinalProblem[] = [
+  {
     id: 'fin-1',
     title: 'Final Challenge: Third Maximum Number',
     problemStatement: `Given an integer array, return the third distinct maximum number. If it does not exist, return the maximum number.
@@ -654,30 +655,10 @@ The provided code is buggy and fails to correctly identify the third distinct ma
 `,
     buggyCode: `public class ThirdMax {
     public static int thirdMax(int[] nums) {
-        int first = Integer.MIN_VALUE, second = Integer.MIN_VALUE, third = Integer.MIN_VALUE;
-        for (int n : nums) {
-            if (n > first) {
-                third = second;
-                second = first;
-                first = n;
-            } else if (n > second) {
-                third = second;
-                second = n;
-            } else if (n > third) {
-                third = n;
-            }
-        }
-        return (third == Integer.MIN_VALUE) ? first : third;
-    }
-}`,
-    solutionCode: `public class ThirdMax {
-    public static int thirdMax(int[] nums) {
         Integer first = null, second = null, third = null;
 
         for (int n : nums) {
-            if (n == first || (first != null && n == first.intValue()) || 
-                (second != null && n == second.intValue()) || 
-                (third != null && n == third.intValue())) continue;
+            if (n == first || n == second || n == third) continue;
 
             if (first == null || n > first) {
                 third = second;
@@ -694,5 +675,121 @@ The provided code is buggy and fails to correctly identify the third distinct ma
         return third == null ? first : third;
     }
 }`,
-    buggyOutput: 'Error: Output mismatch. The logic fails to handle duplicates (e.g., [2, 2, 3, 1] returns 2 instead of 1) and does not correctly differentiate between the initial value and a real Integer.MIN_VALUE in the array.'
-};
+    solutionCode: `public class ThirdMax {
+    public static int thirdMax(int[] nums) {
+        Integer first = null, second = null, third = null;
+
+        for (int n : nums) {
+            if (first != null && n == first.intValue()) continue;
+            if (second != null && n == second.intValue()) continue;
+            if (third != null && n == third.intValue()) continue;
+
+            if (first == null || n > first) {
+                third = second;
+                second = first;
+                first = n;
+            } else if (second == null || n > second) {
+                third = second;
+                second = n;
+            } else if (third == null || n > third) {
+                third = n;
+            }
+        }
+
+        return third == null ? (first == null ? 0 : first) : third;
+    }
+}`,
+    buggyOutput: 'Error: Compilation issue or Output mismatch. In Java, primitives and objects can sometimes behave unexpectedly during comparison.'
+  },
+  {
+    id: 'fin-2',
+    title: 'Final Challenge: Detect Cycle in Linked List',
+    problemStatement: `Given head, the head of a linked list, determine if the linked list has a cycle in it. 
+There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the next pointer.
+
+**Task:**
+Find and fix the bug in the provided Floyd's Cycle Detection implementation. The code crashes on certain inputs.
+
+**Requirements:**
+- Implement the Tortoise and Hare algorithm correctly.
+- Ensure the code handles empty lists or lists with a single node safely.
+- Do not use extra memory (O(1) space complexity).
+`,
+    buggyCode: `class Solution {
+    public boolean hasCycle(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+
+        while (fast.next != null && fast != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+
+            if (slow == fast) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}`,
+    solutionCode: `class Solution {
+    public boolean hasCycle(ListNode head) {
+        if (head == null) return false;
+        ListNode slow = head;
+        ListNode fast = head;
+
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+
+            if (slow == fast) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}`,
+    buggyOutput: 'Error: java.lang.NullPointerException. The loop condition is checking fast.next before checking if fast itself is null.'
+  },
+  {
+    id: 'fin-3',
+    title: 'Final Challenge: Maximum Subarray Sum',
+    problemStatement: `Given an integer array nums, find the subarray with the largest sum and return its sum.
+
+**Task:**
+The provided implementation of Kadane's algorithm fails for arrays containing only negative numbers.
+
+**Requirements:**
+- Fix the logic to correctly handle arrays with negative integers.
+- The algorithm should have O(n) time complexity.
+`,
+    buggyCode: `public class Solution {
+    public int maxSubArray(int[] nums) {
+        int maxSoFar = 0;
+        int currentMax = 0;
+        for (int x : nums) {
+            currentMax += x;
+            if (currentMax < 0) currentMax = 0;
+            if (maxSoFar < currentMax) maxSoFar = currentMax;
+        }
+        return maxSoFar;
+    }
+}`,
+    solutionCode: `public class Solution {
+    public int maxSubArray(int[] nums) {
+        int maxSoFar = nums[0];
+        int currentMax = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            currentMax = Math.max(nums[i], currentMax + nums[i]);
+            maxSoFar = Math.max(maxSoFar, currentMax);
+        }
+        return maxSoFar;
+    }
+}`,
+    buggyOutput: 'Incorrect Output. For an input of [-1], the output is 0, but it should be -1.'
+  }
+];
+
+// For backward compatibility while migration occurs
+export const mockFinalProblem = mockFinalProblems[0];

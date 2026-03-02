@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { RoundHeader } from './round-header';
 import { CodeEditor } from '@/components/shared/code-editor';
 import { Button } from '@/components/ui/button';
@@ -22,19 +21,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { mockFinalProblem } from '@/lib/mock-data';
+import { mockFinalProblems } from '@/lib/mock-data';
 import { Play, Send } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import type { Team } from '@/lib/types';
+import type { Team, FinalProblem } from '@/lib/types';
 
 export function FinalRoundView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const [code, setCode] = useState(mockFinalProblem.buggyCode);
+  const [problem, setProblem] = useState<FinalProblem | null>(null);
+  const [code, setCode] = useState('');
   const [output, setOutput] = useState(
     'Click "Run Code" to see the output here.'
   );
@@ -42,7 +42,25 @@ export function FinalRoundView() {
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
-  const problem = mockFinalProblem;
+  useEffect(() => {
+    if (rulesAccepted && !problem) {
+      const assignedFinalProblemId = localStorage.getItem('assignedFinalProblemId');
+      let assignedProblem: FinalProblem | undefined;
+
+      if (assignedFinalProblemId) {
+        assignedProblem = mockFinalProblems.find(p => p.id === assignedFinalProblemId);
+      }
+
+      if (!assignedProblem) {
+        // Simple random assignment for Final Round
+        assignedProblem = mockFinalProblems[Math.floor(Math.random() * mockFinalProblems.length)];
+        localStorage.setItem('assignedFinalProblemId', assignedProblem.id);
+      }
+
+      setProblem(assignedProblem);
+      setCode(assignedProblem.buggyCode);
+    }
+  }, [rulesAccepted, problem]);
 
   const handleRunCode = () => {
     if (!problem) return;
@@ -53,20 +71,29 @@ export function FinalRoundView() {
     setTimeout(() => {
       const normalizedUserCode = code.replace(/\s+/g, '');
       const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
-      
-      // Basic check for the provided solution pattern
-      const hasProperNullCheck = code.includes('Integer') && code.includes('null');
-      const hasProperAssignment = code.includes('third = second') && code.includes('second = first') && code.includes('first = n');
+
+      // Validation logic for each problem
+      let isCorrect = false;
+      if (problem.id === 'fin-1') {
+        // Third Max
+        isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null') && code.includes('n == first'));
+      } else if (problem.id === 'fin-2') {
+        // Detect Cycle
+        isCorrect = code.includes('fast != null && fast.next != null');
+      } else if (problem.id === 'fin-3') {
+        // Max Subarray
+        isCorrect = code.includes('Math.max') && code.includes('nums[0]');
+      }
 
       if (normalizedUserCode === normalizedBuggyCode) {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
-      } else if (hasProperNullCheck && hasProperAssignment) {
-        setOutput('Success! All test cases passed.\n\nTest Case 1: [3, 2, 1] -> Output: 1\nTest Case 2: [1, 2] -> Output: 2\nTest Case 3: [2, 2, 3, 1] -> Output: 1');
+      } else if (isCorrect) {
+        setOutput('Success! All test cases passed.\n\nOutput:\nProgram executed successfully with the correct logic for the final challenge.');
       } else {
-        setOutput('Compilation Error or Output Mismatch: The logic provided does not handle edge cases correctly. Please ensure you are handling distinct values and null comparisons properly.');
+        setOutput('Compilation Error or Output Mismatch: The logic provided does not handle edge cases correctly. Please ensure you are addressing the specific bugs mentioned in the requirements.');
       }
       setIsRunning(false);
-    }, 50);
+    }, 100);
   };
 
   const endRound = useCallback(
@@ -99,8 +126,17 @@ export function FinalRoundView() {
   );
   
   const handleSubmit = () => {
-    // Correct if it has the key elements of the provided fix
-    const isCorrect = code.includes('Integer') && code.includes('null') && code.includes('third = second');
+    if (!problem) return;
+    
+    let isCorrect = false;
+    if (problem.id === 'fin-1') {
+      isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null'));
+    } else if (problem.id === 'fin-2') {
+      isCorrect = code.includes('fast != null && fast.next != null');
+    } else if (problem.id === 'fin-3') {
+      isCorrect = code.includes('Math.max') && code.includes('nums[0]');
+    }
+
     setIsSolutionCorrect(isCorrect);
     setShowResultDialog(true);
   };
@@ -136,6 +172,7 @@ export function FinalRoundView() {
                 <p><strong>Switching tabs or windows will result in disqualification after 3 warnings.</strong></p>
                 <p>The final problem is worth 200 points.</p>
                 <p><strong>Language:</strong> Java</p>
+                <p><strong>Challenge:</strong> You will be assigned a specific Java algorithm with a hidden bug. You must fix the code to pass all test cases including edge cases.</p>
               </div>
             </ScrollArea>
             <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">Start Final Round</Button>
@@ -144,6 +181,8 @@ export function FinalRoundView() {
       </div>
     );
   }
+
+  if (!problem) return null;
 
   return (
     <div className="flex flex-col h-screen font-code">
@@ -203,3 +242,4 @@ export function FinalRoundView() {
     </div>
   );
 }
+
