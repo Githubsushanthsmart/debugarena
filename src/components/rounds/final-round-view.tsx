@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useCallback, useState } from 'react';
@@ -49,6 +48,7 @@ export function FinalRoundView() {
     setIsRunning(true);
     setOutput('Compiling and running...');
 
+    // Reduced timeout for near-instant execution
     setTimeout(() => {
       const normalizedUserCode = code.replace(/\s+/g, '');
       const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
@@ -62,7 +62,7 @@ export function FinalRoundView() {
         setOutput('Runtime Error: Logical mismatch. Output does not match the expected result for the Palindrome check.');
       }
       setIsRunning(false);
-    }, 300);
+    }, 50);
   };
 
   const endRound = useCallback(
