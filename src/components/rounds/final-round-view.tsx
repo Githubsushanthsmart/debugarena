@@ -35,53 +35,67 @@ export function FinalRoundView() {
   const { toast } = useToast();
   const [problem, setProblem] = useState<FinalProblem | null>(null);
   const [code, setCode] = useState('');
-  const [output, setOutput] = useState(
-    'Click "Run Code" to see the output here.'
-  );
+  const [output, setOutput] = useState('Click "Run Code" to see the output here.');
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
+  // Initialize problem assignment
   useEffect(() => {
-    if (rulesAccepted && !problem) {
-      const assignedFinalProblemId = localStorage.getItem('assignedFinalProblemId');
-      let assignedProblem: FinalProblem | undefined;
+    if (!rulesAccepted) return;
 
-      if (assignedFinalProblemId) {
-        assignedProblem = mockFinalProblems.find(p => p.id === assignedFinalProblemId);
-      }
+    const teamData = localStorage.getItem('currentTeam');
+    const team: Team | null = teamData ? JSON.parse(teamData) : null;
+    
+    // Check if we already have an assignment for this specific team/session
+    const assignedId = localStorage.getItem(`assignedFinalProblemId_${team?.id || 'anon'}`);
+    let selectedProblem: FinalProblem | undefined;
 
-      if (!assignedProblem) {
-        // Simple random assignment for Final Round
-        assignedProblem = mockFinalProblems[Math.floor(Math.random() * mockFinalProblems.length)];
-        localStorage.setItem('assignedFinalProblemId', assignedProblem.id);
-      }
-
-      setProblem(assignedProblem);
-      setCode(assignedProblem.buggyCode);
+    if (assignedId) {
+      selectedProblem = mockFinalProblems.find(p => p.id === assignedId);
     }
-  }, [rulesAccepted, problem]);
+
+    if (!selectedProblem) {
+      // Logic to ensure different teams get different codes
+      // We use the team's ID to seed the selection if possible, or just random
+      if (team) {
+        // Use a simple hash of the team name/id to pick one of the 3 problems
+        const hash = team.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        selectedProblem = mockFinalProblems[hash % mockFinalProblems.length];
+      } else {
+        selectedProblem = mockFinalProblems[Math.floor(Math.random() * mockFinalProblems.length)];
+      }
+      
+      if (selectedProblem) {
+        localStorage.setItem(`assignedFinalProblemId_${team?.id || 'anon'}`, selectedProblem.id);
+      }
+    }
+
+    if (selectedProblem) {
+      setProblem(selectedProblem);
+      setCode(selectedProblem.buggyCode);
+    }
+  }, [rulesAccepted]);
 
   const handleRunCode = () => {
     if (!problem) return;
     setIsRunning(true);
-    setOutput('Compiling and running tests...');
+    setOutput('Compiling and running Java tests...');
 
     // Simulate instant execution
     setTimeout(() => {
       const normalizedUserCode = code.replace(/\s+/g, '');
       const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
 
-      // Validation logic for each problem
       let isCorrect = false;
       if (problem.id === 'fin-1') {
-        // Third Max
-        isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null') && code.includes('n == first'));
+        // Third Max: Fix involves using .intValue() or checking null properly before comparison
+        isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null') && code.includes('n > first'));
       } else if (problem.id === 'fin-2') {
-        // Detect Cycle
+        // Detect Cycle: Fix involves checking fast != null BEFORE fast.next != null
         isCorrect = code.includes('fast != null && fast.next != null');
       } else if (problem.id === 'fin-3') {
-        // Max Subarray
+        // Max Subarray: Kadane fix for negative numbers
         isCorrect = code.includes('Math.max') && code.includes('nums[0]');
       }
 
@@ -90,10 +104,10 @@ export function FinalRoundView() {
       } else if (isCorrect) {
         setOutput('Success! All test cases passed.\n\nOutput:\nProgram executed successfully with the correct logic for the final challenge.');
       } else {
-        setOutput('Compilation Error or Output Mismatch: The logic provided does not handle edge cases correctly. Please ensure you are addressing the specific bugs mentioned in the requirements.');
+        setOutput('Runtime Error or Logic Mismatch: Your code did not solve the edge cases correctly. Please check the problem requirements again.');
       }
       setIsRunning(false);
-    }, 100);
+    }, 150);
   };
 
   const endRound = useCallback(
@@ -173,6 +187,9 @@ export function FinalRoundView() {
                 <p>The final problem is worth 200 points.</p>
                 <p><strong>Language:</strong> Java</p>
                 <p><strong>Challenge:</strong> You will be assigned a specific Java algorithm with a hidden bug. You must fix the code to pass all test cases including edge cases.</p>
+                <hr />
+                <h3>Tie-Breaker Rule</h3>
+                <p>In the event of a tie, the team with the earliest submission time wins the higher rank.</p>
               </div>
             </ScrollArea>
             <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">Start Final Round</Button>
@@ -182,31 +199,33 @@ export function FinalRoundView() {
     );
   }
 
-  if (!problem) return null;
+  if (!problem) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-xl font-headline animate-pulse">Assigning Problem...</p>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-screen font-code">
       <RoundHeader round={3} title="Final Round" countdownDuration={25 * 60} onFinish={handleFinish} />
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-hidden">
-        <Card className="flex flex-col overflow-hidden">
-          <CardHeader><CardTitle className="font-headline">{problem.title}</CardTitle></CardHeader>
-          <CardContent className="flex-1 overflow-auto">
-            <ScrollArea className="h-full pr-4">
+        <Card className="flex flex-col overflow-hidden shadow-2xl border-primary/20">
+          <CardHeader className="bg-muted/30 border-b">
+            <CardTitle className="font-headline text-primary">{problem.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-auto p-6">
+            <ScrollArea className="h-full">
               <div className="prose prose-invert max-w-none font-body">
                 <div dangerouslySetInnerHTML={{ __html: problem.problemStatement.replace(/\n/g, '<br/>') }} />
-                <h3 className="font-headline mt-4">Provided Buggy Code:</h3>
-                <div className="bg-background rounded-md p-4 text-sm border">
-                  <pre><code>{problem.buggyCode}</code></pre>
-                </div>
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
 
         <div className="flex flex-col gap-4 overflow-hidden">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-lg border">
             <Select defaultValue="java" disabled>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Select Language" /></SelectTrigger>
+              <SelectTrigger className="w-[180px] bg-background"><SelectValue placeholder="Select Language" /></SelectTrigger>
               <SelectContent><SelectItem value="java">Java</SelectItem></SelectContent>
             </Select>
             <div className="flex-1" />
@@ -218,28 +237,33 @@ export function FinalRoundView() {
             </Button>
           </div>
           <div className="flex-1 grid grid-rows-2 gap-4 overflow-hidden">
-            <CodeEditor code={code} onCodeChange={setCode} language="java" />
-            <Card className="flex flex-col">
-              <CardHeader><CardTitle className="font-headline text-lg">Output Console</CardTitle></CardHeader>
-              <CardContent className="flex-1 bg-background rounded-b-md p-4 overflow-auto">
-                <pre className={`text-sm whitespace-pre-wrap ${output.includes('Success') ? 'text-green-400' : 'text-muted-foreground'}`}>{output}</pre>
+            <div className="relative overflow-hidden border rounded-md shadow-inner">
+               <CodeEditor code={code} onCodeChange={setCode} language="java" />
+            </div>
+            <Card className="flex flex-col border-primary/20 shadow-xl overflow-hidden">
+              <CardHeader className="py-3 bg-muted/50 border-b">
+                <CardTitle className="font-headline text-sm uppercase tracking-widest text-muted-foreground">Output Console</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 bg-black/40 p-4 overflow-auto font-mono">
+                <pre className={`text-sm whitespace-pre-wrap ${output.includes('Success') ? 'text-green-400' : output.includes('Error') ? 'text-red-400' : 'text-blue-200'}`}>{output}</pre>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
       <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-accent">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-headline">Final Submission Received</AlertDialogTitle>
-            <AlertDialogDescription className="text-lg">Your response has been recorded. The competition is now over.</AlertDialogDescription>
+            <AlertDialogTitle className="text-2xl font-headline text-accent">Final Submission Received</AlertDialogTitle>
+            <AlertDialogDescription className="text-lg">
+              {isSolutionCorrect ? 'Outstanding! Your solution passed all verification checks.' : 'Your submission has been recorded. The competition is now complete.'}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => endRound(isSolutionCorrect)}>Finish Competition</AlertDialogAction>
+            <AlertDialogAction onClick={() => endRound(isSolutionCorrect)} className="bg-accent text-accent-foreground hover:bg-accent/90">Finish Competition</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
   );
 }
-
