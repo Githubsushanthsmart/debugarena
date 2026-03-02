@@ -3,13 +3,13 @@ import { DebuggingView } from '@/components/rounds/debugging-view';
 import { FinalRoundView } from '@/components/rounds/final-round-view';
 
 type RoundPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export default function RoundPage({ params }: RoundPageProps) {
-  const { id } = params;
+export default async function RoundPage({ params }: RoundPageProps) {
+  const { id } = await params;
 
   const renderRound = () => {
     switch (id) {
