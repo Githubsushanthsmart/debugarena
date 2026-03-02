@@ -1,0 +1,166 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * DEBUG ARENA SECURITY RULES
+     *
+     * CORE PHILOSOPHY:
+     * This ruleset implements a robust, multi-tenant security model for a debugging competition. 
+     * It relies on Path-Based Ownership for team data and Role-Based Access Control (RBAC) 
+     * via an admin collection for administrative tasks.
+     *
+     * DATA STRUCTURE:
+     * - /roles_admin/{adminId}: Marks users with administrative privileges.
+     * - /teams/{teamId}: Root for all team-specific data (profiles, submissions, results).
+     * - /competitionRounds/{roundId}: Public configuration for the competition rounds.
+     * - /antiCheatingEvents/{eventId}: Logs for security monitoring.
+     *
+     * KEY SECURITY DECISIONS:
+     * - Authorization Independence: Subcollections (like submissions) denormalize the teamId 
+     *   to ensure rules can be validated efficiently without parent document lookups.
+     * - Structural Segregation: Sensitive data (MCQ answers and coding test cases) is stored 
+     *   in dedicated subcollections restricted to admins only, preventing accidental leak to teams.
+     * - Prototyping Flexibility: Rules focus on "Who" can access data rather than "What" the data 
+     *   looks like, allowing for rapid schema iteration.
+     *
+     * DENORMALIZATION FOR AUTHORIZATION:
+     * - Teams are required to include their UID (teamId) in the data of their submissions.
+     * - Security events include the teamId for admin filtering and ownership verification.
+     */
+
+    // --- HELPER FUNCTIONS ---
+
+    /** Checks if the user is authenticated. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** Checks if the authenticated user has an entry in the admin roles collection. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /** Checks if the user's UID matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Checks ownership and ensures the document exists for update/delete operations. */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Admin role markers. Only readable by admins. Writes are locked (manual/system managed).
+     * @path /roles_admin/{adminId}
+     * @allow get, list: if isAdmin();
+     * @deny create, update, delete: if true;
+     * @principle Database Access Control (DBAC) marker.
+     */
+    match /roles_admin/{adminId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Team profiles. Teams manage their own profile; Admins oversee all.
+     * @path /teams/{teamId}
+     * @allow create: if isOwner(teamId) && request.resource.data.id == teamId;
+     * @allow update: if (isOwner(teamId) || isAdmin()) && request.resource.data.id == resource.data.id;
+     * @principle Path-based ownership with relational integrity for ID.
+     */
+    match /teams/{teamId} {
+      allow get: if isOwner(teamId) || isAdmin();
+      allow list: if isAdmin(); // Teams should not be able to list all other teams.
+      allow create: if isOwner(teamId) && request.resource.data.id == teamId;
+      allow update: if (isExistingOwner(teamId) || isAdmin()) && request.resource.data.id == resource.data.id;
+      allow delete: if isAdmin();
+
+      /**
+       * @description MCQ Submissions nested under the team.
+       * @path /teams/{teamId}/mcqSubmissions/{submissionId}
+       * @allow create: if isOwner(teamId) && request.resource.data.teamId == teamId;
+       */
+      match /mcqSubmissions/{submissionId} {
+        allow get, list: if isOwner(teamId) || isAdmin();
+        allow create: if isOwner(teamId) && request.resource.data.teamId == teamId;
+        allow update: if (isExistingOwner(teamId) || isAdmin()) && request.resource.data.teamId == resource.data.teamId;
+        allow delete: if isAdmin();
+      }
+
+      /**
+       * @description Coding Submissions nested under the team.
+       * @path /teams/{teamId}/codingSubmissions/{submissionId}
+       */
+      match /codingSubmissions/{submissionId} {
+        allow get, list: if isOwner(teamId) || isAdmin();
+        allow create: if isOwner(teamId) && request.resource.data.teamId == teamId;
+        allow update: if (isExistingOwner(teamId) || isAdmin()) && request.resource.data.teamId == resource.data.teamId;
+        allow delete: if isAdmin();
+
+        /**
+         * @description Detailed test case results for a specific coding submission.
+         * @path /teams/{teamId}/codingSubmissions/{codingSubmissionId}/testCaseResults/{resultId}
+         */
+        match /testCaseResults/{resultId} {
+          allow get, list: if isOwner(teamId) || isAdmin();
+          allow create, update: if isAdmin(); // Usually handled by backend, but allowing admin for prototyping.
+          allow delete: if isAdmin();
+        }
+      }
+    }
+
+    /**
+     * @description Competition Round configuration. Read-only for teams, write for admins.
+     * @path /competitionRounds/{roundId}
+     */
+    match /competitionRounds/{roundId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      /**
+       * @description Public MCQ questions.
+       */
+      match /mcqQuestions/{mcqQuestionId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+      }
+
+      /**
+       * @description Sensitive MCQ answers. Restricted to admins only.
+       */
+      match /mcqQuestionAnswers/{mcqQuestionId} {
+        allow get, list, create, update, delete: if isAdmin();
+      }
+
+      /**
+       * @description Coding problem statements.
+       */
+      match /codingProblems/{codingProblemId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+
+        /**
+         * @description Sensitive coding test cases. Restricted to admins only.
+         */
+        match /testCases/{testCaseId} {
+          allow get, list, create, update, delete: if isAdmin();
+        }
+      }
+    }
+
+    /**
+     * @description Logging of anti-cheating events. Teams can only create their own events.
+     * @path /antiCheatingEvents/{eventId}
+     * @allow create: if isSignedIn() && request.resource.data.teamId == request.auth.uid;
+     */
+    match /antiCheatingEvents/{eventId} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.teamId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

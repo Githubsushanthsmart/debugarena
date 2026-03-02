@@ -1,0 +1,699 @@
+{
+  "entities": {
+    "Team": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Team",
+      "type": "object",
+      "description": "Represents a participating team in the debugging competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Team entity."
+        },
+        "teamName": {
+          "type": "string",
+          "description": "The unique name of the team."
+        },
+        "collegeName": {
+          "type": "string",
+          "description": "The name of the college the team represents."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address used by the team for authentication. This must be unique per team.",
+          "format": "email"
+        },
+        "registeredAt": {
+          "type": "string",
+          "description": "Timestamp when the team registered for the competition.",
+          "format": "date-time"
+        },
+        "warningCount": {
+          "type": "number",
+          "description": "Current count of anti-cheating warnings issued to the team. Reaching a threshold (e.g., 3) may lead to auto-submission/disqualification."
+        },
+        "isDisqualified": {
+          "type": "boolean",
+          "description": "Indicates if the team has been disqualified from the competition due to anti-cheating violations or admin action."
+        },
+        "totalScore": {
+          "type": "number",
+          "description": "The aggregated total score of the team across all completed rounds. Used for the leaderboard."
+        },
+        "lastCorrectSubmissionTime": {
+          "type": "string",
+          "description": "The timestamp of the team's last correct submission for any problem, used as a tie-breaker for leaderboard rankings.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "teamName",
+        "collegeName",
+        "email",
+        "registeredAt",
+        "warningCount",
+        "isDisqualified",
+        "totalScore"
+      ]
+    },
+    "CompetitionRound": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CompetitionRound",
+      "type": "object",
+      "description": "Defines the configuration and state for each round of the competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CompetitionRound entity (e.g., 'round1', 'round2', 'round3')."
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the round (e.g., 'MCQ Round', 'Debugging Round', 'Final Round')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the round."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of challenges in this round.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "The duration of the round in minutes."
+        },
+        "order": {
+          "type": "number",
+          "description": "The sequential order of the round in the competition."
+        },
+        "isLocked": {
+          "type": "boolean",
+          "description": "Indicates if the round is currently locked by administrators, preventing team access."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if the round is currently active and open for submissions."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "type",
+        "durationMinutes",
+        "order",
+        "isLocked",
+        "isActive"
+      ]
+    },
+    "MCQQuestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MCQQuestion",
+      "type": "object",
+      "description": "Represents a multiple-choice question for the MCQ round.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the MCQQuestion entity."
+        },
+        "roundId": {
+          "type": "string",
+          "description": "Reference to the CompetitionRound this question belongs to. (Relationship: CompetitionRound 1:N MCQQuestion)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text of the multiple-choice question."
+        },
+        "options": {
+          "type": "array",
+          "description": "An array of possible answer options for the question.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "correctOptionIndex": {
+          "type": "number",
+          "description": "The zero-based index of the correct answer within the 'options' array."
+        },
+        "questionSet": {
+          "type": "string",
+          "description": "Designates the question set ('A' or 'B') this MCQ belongs to for random assignment.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "roundId",
+        "text",
+        "options",
+        "correctOptionIndex",
+        "questionSet"
+      ]
+    },
+    "CodingProblem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CodingProblem",
+      "type": "object",
+      "description": "Represents a coding challenge for debugging or final rounds.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CodingProblem entity."
+        },
+        "roundId": {
+          "type": "string",
+          "description": "Reference to the CompetitionRound this problem belongs to. (Relationship: CompetitionRound 1:N CodingProblem)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the coding problem."
+        },
+        "problemStatement": {
+          "type": "string",
+          "description": "The full description and requirements for the coding problem."
+        },
+        "buggyCodeJava": {
+          "type": "string",
+          "description": "The initial buggy Java code snippet provided to teams."
+        },
+        "buggyCodePython": {
+          "type": "string",
+          "description": "The initial buggy Python code snippet provided to teams."
+        },
+        "maxScore": {
+          "type": "number",
+          "description": "The maximum score attainable for correctly solving this problem."
+        },
+        "isDebuggingProblem": {
+          "type": "boolean",
+          "description": "Indicates if this is specifically a debugging problem (true for Round 2) or a general competitive programming problem (false for Round 3)."
+        }
+      },
+      "required": [
+        "id",
+        "roundId",
+        "title",
+        "problemStatement",
+        "buggyCodeJava",
+        "buggyCodePython",
+        "maxScore",
+        "isDebuggingProblem"
+      ]
+    },
+    "TestCase": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TestCase",
+      "type": "object",
+      "description": "Represents a hidden test case for a CodingProblem.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TestCase entity."
+        },
+        "codingProblemId": {
+          "type": "string",
+          "description": "Reference to the CodingProblem this test case belongs to. (Relationship: CodingProblem 1:N TestCase)"
+        },
+        "input": {
+          "type": "string",
+          "description": "The input string fed to the submitted code for this test case."
+        },
+        "expectedOutput": {
+          "type": "string",
+          "description": "The exact output string expected from the submitted code for this test case."
+        },
+        "scoreWeight": {
+          "type": "number",
+          "description": "The weight or percentage of the problem's total score contributed by this test case."
+        },
+        "isHidden": {
+          "type": "boolean",
+          "description": "Indicates if the details of this test case are hidden from the teams."
+        }
+      },
+      "required": [
+        "id",
+        "codingProblemId",
+        "input",
+        "expectedOutput",
+        "scoreWeight",
+        "isHidden"
+      ]
+    },
+    "TeamMCQSubmission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TeamMCQSubmission",
+      "type": "object",
+      "description": "Records a team's submission for an MCQ question.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TeamMCQSubmission entity."
+        },
+        "teamId": {
+          "type": "string",
+          "description": "Reference to the Team that made the submission. (Relationship: Team 1:N TeamMCQSubmission)"
+        },
+        "mcqQuestionId": {
+          "type": "string",
+          "description": "Reference to the MCQQuestion being answered. (Relationship: MCQQuestion 1:N TeamMCQSubmission)"
+        },
+        "roundId": {
+          "type": "string",
+          "description": "Reference to the CompetitionRound this submission belongs to. (Relationship: CompetitionRound 1:N TeamMCQSubmission)"
+        },
+        "selectedOptionIndex": {
+          "type": "number",
+          "description": "The zero-based index of the option chosen by the team."
+        },
+        "isCorrect": {
+          "type": "boolean",
+          "description": "Indicates whether the selected option was correct."
+        },
+        "scoreEarned": {
+          "type": "number",
+          "description": "The score awarded for this specific MCQ submission (e.g., 0 or 1)."
+        },
+        "submissionTime": {
+          "type": "string",
+          "description": "Timestamp when the MCQ was submitted.",
+          "format": "date-time"
+        },
+        "isAutoSubmitted": {
+          "type": "boolean",
+          "description": "True if the submission was automatically made due to timeout or anti-cheating warnings."
+        }
+      },
+      "required": [
+        "id",
+        "teamId",
+        "mcqQuestionId",
+        "roundId",
+        "selectedOptionIndex",
+        "isCorrect",
+        "scoreEarned",
+        "submissionTime",
+        "isAutoSubmitted"
+      ]
+    },
+    "TeamCodingSubmission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TeamCodingSubmission",
+      "type": "object",
+      "description": "Records a team's code submission for a Debugging or Final Round problem.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TeamCodingSubmission entity."
+        },
+        "teamId": {
+          "type": "string",
+          "description": "Reference to the Team that made the submission. (Relationship: Team 1:N TeamCodingSubmission)"
+        },
+        "codingProblemId": {
+          "type": "string",
+          "description": "Reference to the CodingProblem being solved. (Relationship: CodingProblem 1:N TeamCodingSubmission)"
+        },
+        "roundId": {
+          "type": "string",
+          "description": "Reference to the CompetitionRound this submission belongs to. (Relationship: CompetitionRound 1:N TeamCodingSubmission)"
+        },
+        "submittedCode": {
+          "type": "string",
+          "description": "The source code submitted by the team."
+        },
+        "programmingLanguage": {
+          "type": "string",
+          "description": "The programming language of the submitted code ('Java' or 'Python').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "submissionTime": {
+          "type": "string",
+          "description": "Timestamp when the code was submitted.",
+          "format": "date-time"
+        },
+        "overallScore": {
+          "type": "number",
+          "description": "The total score earned by the team for this specific coding problem submission."
+        },
+        "passedAllTestCases": {
+          "type": "boolean",
+          "description": "Indicates if the submitted code passed all hidden test cases."
+        },
+        "isAutoSubmitted": {
+          "type": "boolean",
+          "description": "True if the submission was automatically made due to timeout or anti-cheating warnings."
+        }
+      },
+      "required": [
+        "id",
+        "teamId",
+        "codingProblemId",
+        "roundId",
+        "submittedCode",
+        "programmingLanguage",
+        "submissionTime",
+        "overallScore",
+        "passedAllTestCases",
+        "isAutoSubmitted"
+      ]
+    },
+    "SubmissionTestCaseResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SubmissionTestCaseResult",
+      "type": "object",
+      "description": "Detailed results for a single test case within a TeamCodingSubmission.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SubmissionTestCaseResult entity."
+        },
+        "teamCodingSubmissionId": {
+          "type": "string",
+          "description": "Reference to the TeamCodingSubmission this result is part of. (Relationship: TeamCodingSubmission 1:N SubmissionTestCaseResult)"
+        },
+        "testCaseId": {
+          "type": "string",
+          "description": "Reference to the original TestCase executed. (Relationship: TestCase 1:N SubmissionTestCaseResult)"
+        },
+        "actualOutput": {
+          "type": "string",
+          "description": "The actual output generated by the submitted code for this test case."
+        },
+        "compilerOutput": {
+          "type": "string",
+          "description": "Any compiler messages (warnings or errors) for this execution."
+        },
+        "runtimeOutput": {
+          "type": "string",
+          "description": "Any runtime errors or exceptions for this execution."
+        },
+        "executionTimeMs": {
+          "type": "number",
+          "description": "The execution time of the code for this test case in milliseconds."
+        },
+        "memoryUsedKb": {
+          "type": "number",
+          "description": "The memory used by the code for this test case in kilobytes."
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Indicates whether the actual output matched the expected output for this test case."
+        },
+        "scoreEarned": {
+          "type": "number",
+          "description": "The score earned for passing this specific test case."
+        }
+      },
+      "required": [
+        "id",
+        "teamCodingSubmissionId",
+        "testCaseId",
+        "actualOutput",
+        "compilerOutput",
+        "runtimeOutput",
+        "executionTimeMs",
+        "memoryUsedKb",
+        "passed",
+        "scoreEarned"
+      ]
+    },
+    "AntiCheatingEvent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AntiCheatingEvent",
+      "type": "object",
+      "description": "Logs events detected by the anti-cheating system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AntiCheatingEvent entity."
+        },
+        "teamId": {
+          "type": "string",
+          "description": "Reference to the Team associated with this event. (Relationship: Team 1:N AntiCheatingEvent)"
+        },
+        "roundId": {
+          "type": "string",
+          "description": "Reference to the CompetitionRound during which the event occurred. (Relationship: CompetitionRound 1:N AntiCheatingEvent)"
+        },
+        "eventType": {
+          "type": "string",
+          "description": "The type of anti-cheating event detected (e.g., 'tab_switch', 'window_blur', 'copy_paste_attempt', 'multiple_login_attempt')."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp when the anti-cheating event was detected.",
+          "format": "date-time"
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "The IP address from which the event originated."
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "The user agent string of the client browser."
+        }
+      },
+      "required": [
+        "id",
+        "teamId",
+        "roundId",
+        "eventType",
+        "timestamp",
+        "ipAddress",
+        "userAgent"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "admin",
+          "schema": {
+            "$ref": "#/backend/entities/Team"
+          },
+          "description": "Admin role collection for Database Access Control (DBAC). The presence of a document at this path signifies that the user (whose UID matches `adminId`) has administrative privileges. This document itself can be empty or contain minimal data. This is crucial for securing the admin panel and sensitive operations.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The Firebase Auth UID of the user designated as an administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}",
+        "definition": {
+          "entityName": "Team",
+          "schema": {
+            "$ref": "#/backend/entities/Team"
+          },
+          "description": "Stores individual team profiles. The `teamId` in the path corresponds to the Firebase Auth UID of the registered team. Teams can only read and update their own profile. Admins can read and update all team profiles. This path ensures Path-Based Ownership. Includes denormalized 'totalScore' and 'lastCorrectSubmissionTime' for leaderboard functionality.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier for the team, which is also their Firebase Auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/competitionRounds/{roundId}",
+        "definition": {
+          "entityName": "CompetitionRound",
+          "schema": {
+            "$ref": "#/backend/entities/CompetitionRound"
+          },
+          "description": "Defines the configuration and state for each round of the competition. This collection is primarily read-only for participating teams and fully manageable (read/write) by administrators.",
+          "params": [
+            {
+              "name": "roundId",
+              "description": "The unique identifier for a competition round (e.g., 'round1', 'round2')."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/competitionRounds/{roundId}/mcqQuestions/{mcqQuestionId}",
+        "definition": {
+          "entityName": "MCQQuestion",
+          "schema": {
+            "$ref": "#/backend/entities/MCQQuestion"
+          },
+          "description": "Stores the public-facing details of MCQ questions (text, options, questionSet) for a specific round. Teams can read these when the round is active. The sensitive 'correctOptionIndex' is *not* stored here; it is segregated into the 'mcqQuestionAnswers' collection for enhanced security. Admins have full read/write access.",
+          "params": [
+            {
+              "name": "roundId",
+              "description": "The unique identifier of the competition round this MCQ question belongs to."
+            },
+            {
+              "name": "mcqQuestionId",
+              "description": "The unique identifier for the MCQ question."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/competitionRounds/{roundId}/mcqQuestionAnswers/{mcqQuestionId}",
+        "definition": {
+          "entityName": "MCQQuestion",
+          "schema": {
+            "$ref": "#/backend/entities/MCQQuestion"
+          },
+          "description": "Contains the sensitive 'correctOptionIndex' for MCQ questions. This collection is strictly restricted to administrator and backend function access only, preventing teams from accessing correct answers prematurely.",
+          "params": [
+            {
+              "name": "roundId",
+              "description": "The unique identifier of the competition round this MCQ question belongs to."
+            },
+            {
+              "name": "mcqQuestionId",
+              "description": "The unique identifier for the MCQ question whose answer is stored here."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/competitionRounds/{roundId}/codingProblems/{codingProblemId}",
+        "definition": {
+          "entityName": "CodingProblem",
+          "schema": {
+            "$ref": "#/backend/entities/CodingProblem"
+          },
+          "description": "Stores the details of coding problems (title, problem statement, buggy code, max score) for a specific round. Teams can read these when the round is active. Admins have full read/write access.",
+          "params": [
+            {
+              "name": "roundId",
+              "description": "The unique identifier of the competition round this coding problem belongs to."
+            },
+            {
+              "name": "codingProblemId",
+              "description": "The unique identifier for the coding problem."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/competitionRounds/{roundId}/codingProblems/{codingProblemId}/testCases/{testCaseId}",
+        "definition": {
+          "entityName": "TestCase",
+          "schema": {
+            "$ref": "#/backend/entities/TestCase"
+          },
+          "description": "Stores hidden test cases for coding problems, including sensitive `input` and `expectedOutput`. This collection is strictly restricted to administrator and backend function access only, ensuring problem integrity and preventing cheating.",
+          "params": [
+            {
+              "name": "roundId",
+              "description": "The unique identifier of the competition round this test case's problem belongs to."
+            },
+            {
+              "name": "codingProblemId",
+              "description": "The unique identifier of the coding problem this test case belongs to."
+            },
+            {
+              "name": "testCaseId",
+              "description": "The unique identifier for the test case."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}/mcqSubmissions/{submissionId}",
+        "definition": {
+          "entityName": "TeamMCQSubmission",
+          "schema": {
+            "$ref": "#/backend/entities/TeamMCQSubmission"
+          },
+          "description": "Records a team's submission for an MCQ question. The `teamId` in the path enforces Path-Based Ownership, meaning a team can only create and read their own submissions. `roundId` and `mcqQuestionId` are denormalized into the document for authorization independence and contextual queries. Admins can read all submissions.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier of the team that made the submission (also the Firebase Auth UID)."
+            },
+            {
+              "name": "submissionId",
+              "description": "The unique identifier for the MCQ submission."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}/codingSubmissions/{submissionId}",
+        "definition": {
+          "entityName": "TeamCodingSubmission",
+          "schema": {
+            "$ref": "#/backend/entities/TeamCodingSubmission"
+          },
+          "description": "Records a team's code submission for a debugging or final round problem. The `teamId` in the path enforces Path-Based Ownership. `roundId` and `codingProblemId` are denormalized into the document for authorization independence and contextual queries. Teams can create and read their own submissions. Admins can read all submissions.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier of the team that made the submission (also the Firebase Auth UID)."
+            },
+            {
+              "name": "submissionId",
+              "description": "The unique identifier for the coding submission."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}/codingSubmissions/{codingSubmissionId}/testCaseResults/{resultId}",
+        "definition": {
+          "entityName": "SubmissionTestCaseResult",
+          "schema": {
+            "$ref": "#/backend/entities/SubmissionTestCaseResult"
+          },
+          "description": "Detailed results for individual test cases within a team's coding submission. The `teamId` and `codingSubmissionId` in the path enforce Path-Based Ownership. `testCaseId` is denormalized. Teams can read their own results for a specific submission. Admins can read all results.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier of the team that made the submission (also the Firebase Auth UID)."
+            },
+            {
+              "name": "codingSubmissionId",
+              "description": "The unique identifier of the parent coding submission this test case result belongs to."
+            },
+            {
+              "name": "resultId",
+              "description": "The unique identifier for the individual test case result."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/antiCheatingEvents/{eventId}",
+        "definition": {
+          "entityName": "AntiCheatingEvent",
+          "schema": {
+            "$ref": "#/backend/entities/AntiCheatingEvent"
+          },
+          "description": "Logs events detected by the anti-cheating system. This collection is primarily written to by backend functions and is strictly read-only for administrators. `teamId` and `roundId` are denormalized for contextual querying by admins.",
+          "params": [
+            {
+              "name": "eventId",
+              "description": "The unique identifier for the anti-cheating event."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for DebugArena is designed with a strong emphasis on Authorization Independence, Structural Segregation, and clear Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence:**\n\n1.  **Path-Based Ownership for Team Data:** All team-specific data, including profiles and submissions, are organized under `/teams/{teamId}` as a top-level collection where `{teamId}` directly corresponds to the `request.auth.uid`. This allows for highly secure and simple rules like `allow read, write: if request.auth.uid == teamId;`. This eliminates the need for `get()` calls to check parent document ownership, making operations atomic and easier to debug.\n2.  **Denormalized Authorization Context:** For subcollections that logically belong to a team (e.g., submissions), relevant authorization identifiers like `roundId`, `mcqQuestionId`, `codingProblemId`, and `testCaseId` are denormalized directly into the submission documents (e.g., `TeamMCQSubmission`, `TeamCodingSubmission`, `SubmissionTestCaseResult`). This means security rules can evaluate access based solely on the document itself and the `request.auth.uid`, without needing to fetch parent documents. For example, a team's submission document will contain its `teamId` (derived from the path), `roundId`, and `mcqQuestionId`, allowing a single rule evaluation to confirm ownership and context.\n3.  **Segregation of Sensitive Data:** Sensitive information like `correctOptionIndex` for `MCQQuestion` and `input`/`expectedOutput` for `TestCase` are stored in separate, strictly admin-only collections (`/competitionRounds/{roundId}/mcqQuestionAnswers/{mcqQuestionId}` and `/competitionRounds/{roundId}/codingProblems/{codingProblemId}/testCases/{testCaseId}`). This prevents accidental exposure and simplifies rules for publicly accessible question/problem data, as those public documents no longer need complex field-level read restrictions for non-admins.\n\n**Support for QAPs (Queries as Authorization Policies):**\n\n1.  **Explicit Path-Based Ownership:** For team-specific submissions, the path `/teams/{teamId}/mcqSubmissions` enables rules to enforce `list` operations where a team can only query their own submissions (`request.auth.uid == teamId`). Admins, with their `/roles_admin/{uid}` privilege, can perform more extensive queries across teams.\n2.  **Global Data Access (Read-Only/Admin-Only):** Collections like `/competitionRounds` are accessible as read-only for all authenticated users, allowing teams to list available rounds. Collections like `/antiCheatingEvents` and the sensitive question/problem parts are strictly admin-only for `list` operations, ensuring no unauthorized users can discover or access this data.\n3.  **Query Filtering for Public Data:** For `mcqQuestions` that have different `questionSet`s, the application is expected to construct queries with a `where('questionSet', '==', <assignedSet>)`. Firestore rules can then validate that this `where` clause is present and that the `assignedSet` matches the team's assigned set for the round, allowing `list` access while enforcing segregation of content by query.\n4.  **DBAC for Admin Queries:** The `/roles_admin/{adminId}` collection is used to implement Database Access Control (DBAC). Rules will check for the existence of `request.auth.uid` in this collection to grant admin privileges for read, write, and list operations across all collections, allowing for full administrative control and QAPs for management tasks."
+  }
+}
