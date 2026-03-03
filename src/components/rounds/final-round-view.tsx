@@ -57,9 +57,8 @@ export function FinalRoundView() {
 
     if (!selectedProblem) {
       // Logic to ensure different teams get different codes
-      // We use the team's ID to seed the selection if possible, or just random
       if (team) {
-        // Use a simple hash of the team name/id to pick one of the 3 problems
+        // Use a simple hash of the team ID to pick one of the 3 problems
         const hash = team.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         selectedProblem = mockFinalProblems[hash % mockFinalProblems.length];
       } else {
@@ -82,22 +81,22 @@ export function FinalRoundView() {
     setIsRunning(true);
     setOutput('Compiling and running Java tests...');
 
-    // Simulate instant execution
+    // Fast simulation (100ms)
     setTimeout(() => {
-      const normalizedUserCode = code.replace(/\s+/g, '');
-      const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
-
       let isCorrect = false;
       if (problem.id === 'fin-1') {
-        // Third Max: Fix involves using .intValue() or checking null properly before comparison
-        isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null') && code.includes('n > first'));
+        // Third Max fix
+        isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null'));
       } else if (problem.id === 'fin-2') {
-        // Detect Cycle: Fix involves checking fast != null BEFORE fast.next != null
+        // Detect Cycle fix
         isCorrect = code.includes('fast != null && fast.next != null');
       } else if (problem.id === 'fin-3') {
-        // Max Subarray: Kadane fix for negative numbers
+        // Max Subarray fix
         isCorrect = code.includes('Math.max') && code.includes('nums[0]');
       }
+
+      const normalizedUserCode = code.replace(/\s+/g, '');
+      const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
 
       if (normalizedUserCode === normalizedBuggyCode) {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
@@ -107,7 +106,7 @@ export function FinalRoundView() {
         setOutput('Runtime Error or Logic Mismatch: Your code did not solve the edge cases correctly. Please check the problem requirements again.');
       }
       setIsRunning(false);
-    }, 150);
+    }, 100);
   };
 
   const endRound = useCallback(
@@ -139,7 +138,7 @@ export function FinalRoundView() {
     [router]
   );
   
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!problem) return;
     
     let isCorrect = false;
@@ -153,7 +152,7 @@ export function FinalRoundView() {
 
     setIsSolutionCorrect(isCorrect);
     setShowResultDialog(true);
-  };
+  }, [code, problem]);
   
   const handleFinish = useCallback(() => {
     toast({ title: "Time's Up!", description: "Submitting your final solution automatically."});
