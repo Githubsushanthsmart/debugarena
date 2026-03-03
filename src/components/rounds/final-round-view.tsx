@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { mockFinalProblems } from '@/lib/mock-data';
-import { Play, Send } from 'lucide-react';
+import { Play, Send, ShieldAlert, Timer, Trophy, AlertCircle } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -41,7 +41,6 @@ export function FinalRoundView() {
   const [isRunning, setIsRunning] = useState(false);
   const startTimeRef = useRef<number | null>(null);
 
-  // Set Start Time exactly when rules are accepted and the problem is assigned
   useEffect(() => {
     if (rulesAccepted && problem && !startTimeRef.current) {
       startTimeRef.current = Date.now();
@@ -182,18 +181,62 @@ export function FinalRoundView() {
   if (!rulesAccepted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
-        <Card className="w-full max-w-4xl animate-fade-in">
-          <CardHeader>
-            <CardTitle className="font-headline text-3xl text-center">Final Round</CardTitle>
+        <Card className="w-full max-w-4xl animate-fade-in border-primary/20">
+          <CardHeader className="text-center border-b bg-muted/30 pb-8">
+            <CardTitle className="font-headline text-4xl text-primary mb-2">
+              The Grand Finale
+            </CardTitle>
+            <p className="text-muted-foreground italic">Ultimate algorithmic challenge. Total accuracy required.</p>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[60vh] pr-6">
-              <div className="prose prose-invert max-w-none font-body text-muted-foreground">
-                <p><strong>Time Limit:</strong> 25 minutes.</p>
-                <p>Your completion time will be recorded for tie-breaking.</p>
+          <CardContent className="pt-8">
+            <ScrollArea className="h-[55vh] pr-6">
+              <div className="space-y-8 font-body">
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <Timer className="h-5 w-5 text-accent" />
+                    <h3>Final Round Duration</h3>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li><strong>Time Limit:</strong> 25 minutes. This is the longest and most difficult round.</li>
+                    <li>The clock is final. Tie-breaks in this round carry the most weight in overall ranking.</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <ShieldAlert className="h-5 w-5 text-destructive" />
+                    <h3>Strict Zero-Tolerance Policy</h3>
+                  </div>
+                  <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                      <li><strong>Anti-Cheating Active:</strong> Tab switches, right-clicks, and window blurs are tracked in real-time.</li>
+                      <li><strong>Disqualification:</strong> 3 warnings result in immediate disqualification and removal from competition results.</li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    <h3>High Stakes Scoring</h3>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>This round is worth <strong>200 points</strong>, double the weight of previous rounds.</li>
+                    <li>A single successful submission against all hidden test cases is required for full points.</li>
+                  </ul>
+                </section>
+
+                <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-accent shrink-0" />
+                  <p className="text-sm text-muted-foreground italic">
+                    Final Tip: Use the console to verify edge cases. The problem provided to you is uniquely assigned to your team ID.
+                  </p>
+                </div>
               </div>
             </ScrollArea>
-            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">Start Round</Button>
+            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90">
+              Start Final Round
+            </Button>
           </CardContent>
         </Card>
       </div>

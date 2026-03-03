@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { mockDebuggingProblems } from '@/lib/mock-data';
-import { Play, Send } from 'lucide-react';
+import { Play, Send, ShieldAlert, Timer, FileCode2, AlertCircle } from 'lucide-react';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
@@ -42,7 +42,6 @@ export function DebuggingView() {
   const [isRunning, setIsRunning] = useState(false);
   const startTimeRef = useRef<number | null>(null);
 
-  // Timer starts exactly when rules are accepted AND a problem is chosen/assigned
   useEffect(() => {
     if (rulesAccepted && problem && !startTimeRef.current) {
       startTimeRef.current = Date.now();
@@ -82,7 +81,6 @@ export function DebuggingView() {
     setIsRunning(true);
     setOutput('Compiling and running tests...');
 
-    // Nearly instant execution simulation
     setTimeout(() => {
       const normalizedUserCode = code.replace(/\s+/g, '');
       const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
@@ -162,21 +160,64 @@ export function DebuggingView() {
   if (!rulesAccepted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
-        <Card className="w-full max-w-4xl animate-fade-in">
-          <CardHeader>
-            <CardTitle className="font-headline text-3xl text-center">
-              Debugging Round – Official Rules
+        <Card className="w-full max-w-4xl animate-fade-in border-primary/20">
+          <CardHeader className="text-center border-b bg-muted/30 pb-8">
+            <CardTitle className="font-headline text-4xl text-primary mb-2">
+              Round 2: Debugging Challenge
             </CardTitle>
+            <p className="text-muted-foreground italic">Identify and fix logical errors within the given time.</p>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[60vh] pr-6">
-              <div className="prose prose-invert max-w-none font-body text-muted-foreground">
-                <p><strong>Time Limit:</strong> 15 minutes.</p>
-                <p>Your completion time will be recorded for tie-breaking.</p>
+          <CardContent className="pt-8">
+            <ScrollArea className="h-[55vh] pr-6">
+              <div className="space-y-8 font-body">
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <Timer className="h-5 w-5 text-accent" />
+                    <h3>Round Constraints</h3>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li><strong>Time Limit:</strong> 15 minutes to fix one core algorithmic bug.</li>
+                    <li>The timer begins the moment you select your programming language (Java or Python).</li>
+                    <li><strong>Tie-Breaking:</strong> Fastest correct submission wins tie-breaks. Accuracy is primary.</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <ShieldAlert className="h-5 w-5 text-destructive" />
+                    <h3>Integrity Rules</h3>
+                  </div>
+                  <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                      <li><strong>Tab Locking:</strong> Do NOT switch tabs. Any window blur is detected and logged.</li>
+                      <li><strong>Anti-Copy:</strong> Code cannot be copied or pasted from external sources.</li>
+                      <li><strong>Warnings:</strong> You will receive a toast warning for every violation. At <strong>3 warnings</strong>, you are auto-disqualified.</li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <FileCode2 className="h-5 w-5 text-primary" />
+                    <h3>Environment Usage</h3>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Use the <strong>"Run Code"</strong> button to test your logic against visible test cases.</li>
+                    <li>Hidden test cases will only be evaluated upon final submission.</li>
+                    <li>Partial scores may be awarded based on proximity to the correct logic.</li>
+                  </ul>
+                </section>
+
+                <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-accent shrink-0" />
+                  <p className="text-sm text-muted-foreground italic">
+                    Note: Your final submission is irreversible. Ensure you have tested your code thoroughly using the provided console.
+                  </p>
+                </div>
               </div>
             </ScrollArea>
-            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">
-              Start Round
+            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90">
+              Begin Challenge
             </Button>
           </CardContent>
         </Card>

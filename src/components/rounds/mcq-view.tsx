@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { McqSetSelector } from './mcq-set-selector';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '../ui/scroll-area';
+import { AlertCircle, ShieldAlert, Timer, Trophy } from 'lucide-react';
 
 export function McqView() {
   const router = useRouter();
@@ -34,7 +35,6 @@ export function McqView() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // Start the timer ONLY when the rules are accepted AND a set is selected
   useEffect(() => {
     if (rulesAccepted && selectedSet && !startTimeRef.current) {
       startTimeRef.current = Date.now();
@@ -71,9 +71,9 @@ export function McqView() {
       if (teamIndex !== -1) {
         const team = leaderboard[teamIndex];
         team.round1Score = score;
-        team.round1Time = durationStr; // Save duration as timestamp
+        team.round1Time = durationStr;
         team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
-        team.timeTaken = timestamp; // Save actual submission clock time
+        team.timeTaken = timestamp;
         
         localStorage.setItem('currentTeam', JSON.stringify(team));
       }
@@ -116,37 +116,69 @@ export function McqView() {
   if (!rulesAccepted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
-        <Card className="w-full max-w-4xl animate-fade-in">
-          <CardHeader>
-            <CardTitle className="font-headline text-3xl text-center">
-              MCQ Round – Official Rules & Guidelines
+        <Card className="w-full max-w-4xl animate-fade-in border-primary/20">
+          <CardHeader className="text-center border-b bg-muted/30 pb-8">
+            <CardTitle className="font-headline text-4xl text-primary mb-2">
+              Round 1: MCQ Challenge
             </CardTitle>
+            <p className="text-muted-foreground italic">Please read the following instructions carefully.</p>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[60vh] pr-6">
-              <div className="prose prose-invert max-w-none font-body text-muted-foreground">
-                <h3>1. Time Limit Rule</h3>
-                <p>
-                  <strong>Rule:</strong> Each team will be given 15 minutes to
-                  answer 20 multiple-choice questions.
-                </p>
-                <hr />
-                <h3>2. No Internet / No AI Rule</h3>
-                <p>
-                  <strong>Rule:</strong> Participants are not allowed to use any external resources.
-                </p>
-                <hr />
-                <h3>3. Scoring Rule</h3>
-                <p>
-                  Each correct answer awards 1 point. Total time taken is recorded for tie-breaking.
-                </p>
+          <CardContent className="pt-8">
+            <ScrollArea className="h-[55vh] pr-6">
+              <div className="space-y-8 font-body">
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <Timer className="h-5 w-5 text-accent" />
+                    <h3>Timing & Duration</h3>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>You have exactly <strong>15 minutes</strong> to complete all 20 questions.</li>
+                    <li>The timer starts as soon as you choose your question set.</li>
+                    <li>If the timer expires, your answers will be <strong>automatically submitted</strong>.</li>
+                    <li>Your completion duration is recorded and used as a primary <strong>tie-breaker</strong> on the leaderboard.</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <ShieldAlert className="h-5 w-5 text-destructive" />
+                    <h3>Anti-Cheating Policy</h3>
+                  </div>
+                  <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                      <li><strong>Tab Switching:</strong> Switching tabs or minimizing the window will trigger a system warning.</li>
+                      <li><strong>Right-Click & Shortcuts:</strong> Right-click, Copy, Paste, and Developer Tools shortcuts are strictly disabled.</li>
+                      <li><strong>Disqualification:</strong> After <strong>3 warnings</strong>, you will be automatically disqualified and removed from the leaderboard.</li>
+                      <li><strong>Device Lock:</strong> Only one device/login is permitted per team.</li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    <h3>Scoring & Format</h3>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Each correct answer is worth <strong>1 point</strong>.</li>
+                    <li>There is <strong>no negative marking</strong> for incorrect answers.</li>
+                    <li>You can move back and forth between questions using the navigation buttons.</li>
+                  </ul>
+                </section>
+
+                <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-accent shrink-0" />
+                  <p className="text-sm text-muted-foreground italic">
+                    By clicking "Start Round", you agree to abide by these rules. Any attempt to bypass the anti-cheating system will result in immediate disqualification without appeal.
+                  </p>
+                </div>
               </div>
             </ScrollArea>
             <Button
               onClick={() => setRulesAccepted(true)}
-              className="w-full mt-8"
+              className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90"
             >
-              I Understand and Agree, Start Round
+              Start Round
             </Button>
           </CardContent>
         </Card>
@@ -203,11 +235,22 @@ export function McqView() {
                 </Label>
               ))}
             </RadioGroup>
-            <Button onClick={handleNext} className="w-full mt-8 text-lg py-6">
-              {currentQuestionIndex < questions.length - 1
-                ? 'Next Question'
-                : 'Submit Answers'}
-            </Button>
+            <div className="flex gap-4 mt-8">
+               {currentQuestionIndex > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                  className="flex-1 py-6 text-lg"
+                >
+                  Previous
+                </Button>
+              )}
+              <Button onClick={handleNext} className="flex-[2] text-lg py-6">
+                {currentQuestionIndex < questions.length - 1
+                  ? 'Next Question'
+                  : 'Submit Answers'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
