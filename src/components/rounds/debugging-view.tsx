@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { RoundHeader } from './round-header';
 import { CodeEditor } from '@/components/shared/code-editor';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,20 @@ export function DebuggingView() {
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (rulesAccepted && problem && !startTimeRef.current) {
+      startTimeRef.current = Date.now();
+    }
+  }, [rulesAccepted, problem]);
+
+  const formatDuration = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleLanguageSelect = (lang: 'python' | 'java') => {
     const allProblemsForLang = mockDebuggingProblems.filter((p) => p.language === lang);
@@ -87,6 +101,8 @@ export function DebuggingView() {
   const endRound = useCallback(
     (isCorrect: boolean) => {
       const score = isCorrect ? 100 : 0;
+      const finishTime = Date.now();
+      const duration = startTimeRef.current ? formatDuration(finishTime - startTimeRef.current) : '00:00';
       const timestamp = new Date().toLocaleTimeString();
       const teamData = localStorage.getItem('currentTeam');
       
@@ -99,7 +115,7 @@ export function DebuggingView() {
         if (teamIndex !== -1) {
           const team = leaderboard[teamIndex];
           team.round2Score = score;
-          team.round2Time = timestamp;
+          team.round2Time = duration;
           team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
           team.timeTaken = timestamp;
           

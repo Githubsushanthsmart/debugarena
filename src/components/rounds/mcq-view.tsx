@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ export function McqView() {
   const { toast } = useToast();
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   const questions: MCQ[] = useMemo(() => {
     if (selectedSet === 'A') return mockMcqSetA;
@@ -33,6 +34,19 @@ export function McqView() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (rulesAccepted && selectedSet && !startTimeRef.current) {
+      startTimeRef.current = Date.now();
+    }
+  }, [rulesAccepted, selectedSet]);
+
+  const formatDuration = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleSubmit = useCallback(() => {
     let score = 0;
     questions.forEach((q) => {
@@ -41,6 +55,8 @@ export function McqView() {
       }
     });
 
+    const finishTime = Date.now();
+    const duration = startTimeRef.current ? formatDuration(finishTime - startTimeRef.current) : '00:00';
     const timestamp = new Date().toLocaleTimeString();
     
     const teamData = localStorage.getItem('currentTeam');
@@ -53,10 +69,9 @@ export function McqView() {
       if (teamIndex !== -1) {
         const team = leaderboard[teamIndex];
         team.round1Score = score;
-        team.round1Time = timestamp;
-        // Total score is sum of all rounds
+        team.round1Time = duration;
         team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
-        team.timeTaken = timestamp; // Track latest activity
+        team.timeTaken = timestamp;
         
         localStorage.setItem('currentTeam', JSON.stringify(team));
       }
@@ -71,11 +86,11 @@ export function McqView() {
 
     toast({
       title: "Round 1 Complete!",
-      description: `Score: ${score} points. Answers submitted.`,
+      description: `Score: ${score} points. Time taken: ${duration}.`,
     });
 
     router.push('/dashboard');
-  }, [router, answers, questions, toast]);
+  }, [router, answers, questions, toast, selectedSet]);
 
   const handleFinish = useCallback(() => {
     toast({ title: "Time's Up!", description: 'Your answers are being submitted automatically.' });
