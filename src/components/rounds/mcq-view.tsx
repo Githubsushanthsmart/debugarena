@@ -34,6 +34,7 @@ export function McqView() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
+  // Start the timer ONLY when the rules are accepted AND a set is selected
   useEffect(() => {
     if (rulesAccepted && selectedSet && !startTimeRef.current) {
       startTimeRef.current = Date.now();
@@ -48,6 +49,11 @@ export function McqView() {
   };
 
   const handleSubmit = useCallback(() => {
+    const finishTime = Date.now();
+    const durationMs = startTimeRef.current ? finishTime - startTimeRef.current : 0;
+    const durationStr = formatDuration(durationMs);
+    const timestamp = new Date().toLocaleTimeString();
+
     let score = 0;
     questions.forEach((q) => {
       if (answers[q.id] && parseInt(answers[q.id], 10) === q.correctAnswerIndex) {
@@ -55,10 +61,6 @@ export function McqView() {
       }
     });
 
-    const finishTime = Date.now();
-    const duration = startTimeRef.current ? formatDuration(finishTime - startTimeRef.current) : '00:00';
-    const timestamp = new Date().toLocaleTimeString();
-    
     const teamData = localStorage.getItem('currentTeam');
     if (teamData) {
       const currentTeam: Team = JSON.parse(teamData);
@@ -69,9 +71,9 @@ export function McqView() {
       if (teamIndex !== -1) {
         const team = leaderboard[teamIndex];
         team.round1Score = score;
-        team.round1Time = duration;
+        team.round1Time = durationStr; // Save duration as timestamp
         team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
-        team.timeTaken = timestamp;
+        team.timeTaken = timestamp; // Save actual submission clock time
         
         localStorage.setItem('currentTeam', JSON.stringify(team));
       }
@@ -84,21 +86,18 @@ export function McqView() {
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
 
-    // Navigation occurs immediately without a score toast, as requested.
     router.push('/dashboard');
   }, [router, answers, questions, selectedSet]);
 
   const handleFinish = useCallback(() => {
-    toast({ title: "Time's Up!", description: 'Your answers are being submitted automatically.' });
     handleSubmit();
-  }, [handleSubmit, toast]);
+  }, [handleSubmit]);
   
   const handleWarning = useCallback((warningCount: number) => {
     if (warningCount >= 3) {
-      toast({ variant: 'destructive', title: 'Disqualified', description: 'Maximum warnings reached. Your test is being submitted.' });
       handleSubmit();
     }
-  }, [handleSubmit, toast]);
+  }, [handleSubmit]);
 
   useAntiCheat(handleWarning);
 
@@ -131,54 +130,15 @@ export function McqView() {
                   <strong>Rule:</strong> Each team will be given 15 minutes to
                   answer 20 multiple-choice questions.
                 </p>
-                <p>
-                  <strong>Why?</strong> Tests quick thinking and fundamental knowledge.
-                </p>
-
                 <hr />
-
                 <h3>2. No Internet / No AI Rule</h3>
                 <p>
-                  <strong>Rule:</strong> Participants are not allowed to use any external resources. This includes:
+                  <strong>Rule:</strong> Participants are not allowed to use any external resources.
                 </p>
-                <ul>
-                  <li>Internet searches (Google, etc.)</li>
-                  <li>ChatGPT or any other AI tools</li>
-                  <li>Collaboration with other teams</li>
-                </ul>
-                <p>
-                  <strong>Why?</strong> Ensures a fair and individual assessment of knowledge.
-                </p>
-
                 <hr />
-
-                <h3>3. One Attempt Per Question</h3>
+                <h3>3. Scoring Rule</h3>
                 <p>
-                  <strong>Rule:</strong> Once you move to the next question, you cannot go back and change your answer.
-                </p>
-                <p>
-                  <strong>Why?</strong> This encourages careful consideration of each question before answering.
-                </p>
-
-                <hr />
-
-                <h3>4. Scoring Rule</h3>
-                <p>
-                  <strong>Rule:</strong> Each correct answer will award your team one point. There are no negative marks for incorrect answers.
-                </p>
-
-                <hr />
-
-                <h3>5. Professional Conduct</h3>
-                <ul>
-                  <li>
-                    No plagiarism.
-                  </li>
-                  <li>Phones must be kept aside and silent.</li>
-                  <li>Any misconduct will lead to immediate disqualification from the competition.</li>
-                </ul>
-                <p>
-                  <strong>Switching tabs or windows will result in a warning. Three warnings will lead to automatic submission.</strong>
+                  Each correct answer awards 1 point. Total time taken is recorded for tie-breaking.
                 </p>
               </div>
             </ScrollArea>

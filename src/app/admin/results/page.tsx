@@ -27,14 +27,15 @@ export default function AdminResultsPage() {
     const leaderboardStr = localStorage.getItem('liveLeaderboard');
     const initialData: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
     
+    // Sort by score (desc), then by time taken (asc)
     const sortedData = [...initialData].sort((a, b) => {
       if (b.score !== a.score) {
         return b.score - a.score;
       }
-      if (a.timeTaken && b.timeTaken) {
-          return a.timeTaken.localeCompare(b.timeTaken);
-      }
-      return 0;
+      // If scores are equal, team with LESS time (faster) wins
+      const timeA = a.round1Time || '99:99';
+      const timeB = b.round1Time || '99:99';
+      return timeA.localeCompare(timeB);
     });
 
     const rankedData = sortedData.map((team, index) => ({ ...team, rank: index + 1 }));
@@ -42,7 +43,7 @@ export default function AdminResultsPage() {
   };
 
   useEffect(() => {
-    getLeaderboardData(); // Initial load
+    getLeaderboardData();
 
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'liveLeaderboard') {
@@ -51,16 +52,12 @@ export default function AdminResultsPage() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const handleClearLeaderboard = () => {
     localStorage.removeItem('liveLeaderboard');
     localStorage.removeItem('disqualifiedTeams');
-    localStorage.removeItem('assignedDebugProblems');
     getLeaderboardData();
     toast({
         title: "Leaderboard Cleared",
@@ -74,13 +71,13 @@ export default function AdminResultsPage() {
         <h1 className="text-3xl font-bold font-headline">Live Leaderboard</h1>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-             <Button variant="destructive">Clear All Data</Button>
+             <Button variant="destructive">Reset All Records</Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete all leaderboard scores, disqualified teams, and problem assignment data.
+                This action cannot be undone. This will permanently delete all leaderboard scores and disqualified records.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -93,7 +90,7 @@ export default function AdminResultsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Detailed Team Scores & Timestamps</CardTitle>
+          <CardTitle>Detailed Team Performance (Score & Time Taken)</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -105,7 +102,7 @@ export default function AdminResultsPage() {
                 <TableHead className="text-center">R2 (Debug)</TableHead>
                 <TableHead className="text-center">R3 (Final)</TableHead>
                 <TableHead className="text-right">Total Score</TableHead>
-                <TableHead className="text-right">Last Submission</TableHead>
+                <TableHead className="text-right">Completion Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,31 +115,31 @@ export default function AdminResultsPage() {
                       <div className="text-xs text-muted-foreground">{team.college}</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="font-bold">{team.round1Score ?? 0}</div>
-                      <div className="text-[10px] text-muted-foreground">{team.round1Time ?? '-'}</div>
+                      <div className="font-bold">{team.round1Score ?? 0} pts</div>
+                      <div className="text-[10px] text-primary font-mono">{team.round1Time ? `${team.round1Time} min` : '-'}</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="font-bold">{team.round2Score ?? 0}</div>
-                      <div className="text-[10px] text-muted-foreground">{team.round2Time ?? '-'}</div>
+                      <div className="font-bold">{team.round2Score ?? 0} pts</div>
+                      <div className="text-[10px] text-primary font-mono">{team.round2Time ? `${team.round2Time} min` : '-'}</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="font-bold">{team.round3Score ?? 0}</div>
-                      <div className="text-[10px] text-muted-foreground">{team.round3Time ?? '-'}</div>
+                      <div className="font-bold">{team.round3Score ?? 0} pts</div>
+                      <div className="text-[10px] text-primary font-mono">{team.round3Time ? `${team.round3Time} min` : '-'}</div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant="outline" className="text-sm font-bold bg-primary/10 border-primary/20">
                         {team.score}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
-                      {team.timeTaken || 'No Submissions'}
+                    <TableCell className="text-right text-xs text-muted-foreground">
+                      Sub: {team.timeTaken || '-'}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center">
-                    No teams have registered yet.
+                    Waiting for participants to submit...
                   </TableCell>
                 </TableRow>
               )}

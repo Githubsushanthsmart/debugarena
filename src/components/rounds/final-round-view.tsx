@@ -41,6 +41,7 @@ export function FinalRoundView() {
   const [isRunning, setIsRunning] = useState(false);
   const startTimeRef = useRef<number | null>(null);
 
+  // Set Start Time exactly when rules are accepted and the problem is assigned
   useEffect(() => {
     if (rulesAccepted && problem && !startTimeRef.current) {
       startTimeRef.current = Date.now();
@@ -54,14 +55,11 @@ export function FinalRoundView() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Initialize problem assignment
   useEffect(() => {
     if (!rulesAccepted) return;
 
     const teamData = localStorage.getItem('currentTeam');
     const team: Team | null = teamData ? JSON.parse(teamData) : null;
-    
-    // Check if we already have an assignment for this specific team/session
     const assignedId = localStorage.getItem(`assignedFinalProblemId_${team?.id || 'anon'}`);
     let selectedProblem: FinalProblem | undefined;
 
@@ -70,9 +68,7 @@ export function FinalRoundView() {
     }
 
     if (!selectedProblem) {
-      // Logic to ensure different teams get different codes
       if (team) {
-        // Use a simple hash of the team ID to pick one of the 3 problems
         const hash = team.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         selectedProblem = mockFinalProblems[hash % mockFinalProblems.length];
       } else {
@@ -93,31 +89,22 @@ export function FinalRoundView() {
   const handleRunCode = () => {
     if (!problem) return;
     setIsRunning(true);
-    setOutput('Compiling and running Java tests...');
+    setOutput('Running Java tests...');
 
-    // Fast simulation (100ms)
     setTimeout(() => {
       let isCorrect = false;
       if (problem.id === 'fin-1') {
-        // Third Max fix
         isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null'));
       } else if (problem.id === 'fin-2') {
-        // Detect Cycle fix
         isCorrect = code.includes('fast != null && fast.next != null');
       } else if (problem.id === 'fin-3') {
-        // Max Subarray fix
         isCorrect = code.includes('Math.max') && code.includes('nums[0]');
       }
 
-      const normalizedUserCode = code.replace(/\s+/g, '');
-      const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
-
-      if (normalizedUserCode === normalizedBuggyCode) {
-        setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
-      } else if (isCorrect) {
-        setOutput('Success! All test cases passed.\n\nOutput:\nProgram executed successfully with the correct logic for the final challenge.');
+      if (isCorrect) {
+        setOutput('Success! All test cases passed.');
       } else {
-        setOutput('Runtime Error or Logic Mismatch: Your code did not solve the edge cases correctly. Please check the problem requirements again.');
+        setOutput('Error: Your solution did not pass verification.');
       }
       setIsRunning(false);
     }, 100);
@@ -125,9 +112,10 @@ export function FinalRoundView() {
 
   const endRound = useCallback(
     (isCorrect: boolean) => {
-      const score = isCorrect ? 200 : 0;
       const finishTime = Date.now();
-      const duration = startTimeRef.current ? formatDuration(finishTime - startTimeRef.current) : '00:00';
+      const durationMs = startTimeRef.current ? finishTime - startTimeRef.current : 0;
+      const durationStr = formatDuration(durationMs);
+      const score = isCorrect ? 200 : 0;
       const timestamp = new Date().toLocaleTimeString();
       const teamData = localStorage.getItem('currentTeam');
       
@@ -140,7 +128,7 @@ export function FinalRoundView() {
         if (teamIndex !== -1) {
           const team = leaderboard[teamIndex];
           team.round3Score = score;
-          team.round3Time = duration;
+          team.round3Time = durationStr;
           team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
           team.timeTaken = timestamp;
           
@@ -177,18 +165,16 @@ export function FinalRoundView() {
   }, [code, problem]);
   
   const handleFinish = useCallback(() => {
-    toast({ title: "Time's Up!", description: "Submitting your final solution automatically."});
     handleSubmit();
-  }, [handleSubmit, toast]);
+  }, [handleSubmit]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
       if (warningCount >= 3) {
-        toast({ variant: 'destructive', title: 'Disqualified', description: 'Maximum warnings reached. Your final submission is being recorded.'});
         endRound(false);
       }
     },
-    [endRound, toast]
+    [endRound]
   );
 
   useAntiCheat(handleWarning);
@@ -198,39 +184,29 @@ export function FinalRoundView() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
         <Card className="w-full max-w-4xl animate-fade-in">
           <CardHeader>
-            <CardTitle className="font-headline text-3xl text-center">Final Round – Official Rules</CardTitle>
+            <CardTitle className="font-headline text-3xl text-center">Final Round</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[60vh] pr-6">
               <div className="prose prose-invert max-w-none font-body text-muted-foreground">
-                <p><strong>Rule:</strong> You have 25 minutes to solve the final challenge.</p>
-                <p><strong>Switching tabs or windows will result in disqualification after 3 warnings.</strong></p>
-                <p>The final problem is worth 200 points.</p>
-                <p><strong>Language:</strong> Java</p>
-                <p><strong>Challenge:</strong> You will be assigned a specific Java algorithm with a hidden bug. You must fix the code to pass all test cases including edge cases.</p>
-                <hr />
-                <h3>Tie-Breaker Rule</h3>
-                <p>In the event of a tie, the team with the earliest submission time wins the higher rank.</p>
+                <p><strong>Time Limit:</strong> 25 minutes.</p>
+                <p>Your completion time will be recorded for tie-breaking.</p>
               </div>
             </ScrollArea>
-            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">Start Final Round</Button>
+            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8">Start Round</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (!problem) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-xl font-headline animate-pulse">Assigning Problem...</p>
-    </div>
-  );
+  if (!problem) return null;
 
   return (
     <div className="flex flex-col h-screen font-code">
       <RoundHeader round={3} title="Final Round" countdownDuration={25 * 60} onFinish={handleFinish} />
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-hidden">
-        <Card className="flex flex-col overflow-hidden shadow-2xl border-primary/20">
+        <Card className="flex flex-col overflow-hidden">
           <CardHeader className="bg-muted/30 border-b">
             <CardTitle className="font-headline text-primary">{problem.title}</CardTitle>
           </CardHeader>
@@ -251,37 +227,32 @@ export function FinalRoundView() {
             </Select>
             <div className="flex-1" />
             <Button variant="secondary" onClick={handleRunCode} disabled={isRunning}>
-              <Play className="mr-2 h-4 w-4" /> {isRunning ? 'Running...' : 'Run Code'}
+              <Play className="mr-2 h-4 w-4" /> Run
             </Button>
             <Button onClick={handleSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <Send className="mr-2 h-4 w-4" /> Submit
             </Button>
           </div>
           <div className="flex-1 grid grid-rows-2 gap-4 overflow-hidden">
-            <div className="relative overflow-hidden border rounded-md shadow-inner">
-               <CodeEditor code={code} onCodeChange={setCode} language="java" />
-            </div>
+             <CodeEditor code={code} onCodeChange={setCode} language="java" />
             <Card className="flex flex-col border-primary/20 shadow-xl overflow-hidden">
-              <CardHeader className="py-3 bg-muted/50 border-b">
-                <CardTitle className="font-headline text-sm uppercase tracking-widest text-muted-foreground">Output Console</CardTitle>
-              </CardHeader>
               <CardContent className="flex-1 bg-black/40 p-4 overflow-auto font-mono">
-                <pre className={`text-sm whitespace-pre-wrap ${output.includes('Success') ? 'text-green-400' : output.includes('Error') ? 'text-red-400' : 'text-blue-200'}`}>{output}</pre>
+                <pre className={`text-sm whitespace-pre-wrap ${output.includes('Success') ? 'text-green-400' : 'text-blue-200'}`}>{output}</pre>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
       <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-        <AlertDialogContent className="border-accent">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-headline text-accent">Final Submission Received</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-headline">Final Submission Received</AlertDialogTitle>
             <AlertDialogDescription className="text-lg">
-              {isSolutionCorrect ? 'Outstanding! Your solution passed all verification checks.' : 'Your submission has been recorded. The competition is now complete.'}
+              The competition is now complete. Your results have been recorded.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => endRound(isSolutionCorrect)} className="bg-accent text-accent-foreground hover:bg-accent/90">Finish Competition</AlertDialogAction>
+            <AlertDialogAction onClick={() => endRound(isSolutionCorrect)}>Finish</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
