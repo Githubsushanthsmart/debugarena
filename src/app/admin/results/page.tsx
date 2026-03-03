@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminResultsPage() {
   const [leaderboard, setLeaderboard] = useState<Team[]>([]);
@@ -73,13 +74,13 @@ export default function AdminResultsPage() {
         <h1 className="text-3xl font-bold font-headline">Live Leaderboard</h1>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-             <Button variant="destructive">Clear Leaderboard</Button>
+             <Button variant="destructive">Clear All Data</Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete all leaderboard, disqualified teams, and problem assignment data.
+                This action cannot be undone. This will permanently delete all leaderboard scores, disqualified teams, and problem assignment data.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -92,31 +93,55 @@ export default function AdminResultsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Live Team Scores</CardTitle>
+          <CardTitle>Detailed Team Scores & Timestamps</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Rank</TableHead>
-                <TableHead>Team</TableHead>
-                <TableHead>College</TableHead>
-                <TableHead>Score</TableHead>
+                <TableHead className="w-12">Rank</TableHead>
+                <TableHead>Team & College</TableHead>
+                <TableHead className="text-center">R1 (MCQ)</TableHead>
+                <TableHead className="text-center">R2 (Debug)</TableHead>
+                <TableHead className="text-center">R3 (Final)</TableHead>
+                <TableHead className="text-right">Total Score</TableHead>
+                <TableHead className="text-right">Last Submission</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {leaderboard.length > 0 ? (
                 leaderboard.map((team) => (
                   <TableRow key={team.id}>
-                    <TableCell className="font-medium">{team.rank}</TableCell>
-                    <TableCell>{team.name}</TableCell>
-                    <TableCell>{team.college}</TableCell>
-                    <TableCell>{team.score}</TableCell>
+                    <TableCell className="font-bold">{team.rank}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{team.name}</div>
+                      <div className="text-xs text-muted-foreground">{team.college}</div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="font-bold">{team.round1Score ?? 0}</div>
+                      <div className="text-[10px] text-muted-foreground">{team.round1Time ?? '-'}</div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="font-bold">{team.round2Score ?? 0}</div>
+                      <div className="text-[10px] text-muted-foreground">{team.round2Time ?? '-'}</div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="font-bold">{team.round3Score ?? 0}</div>
+                      <div className="text-[10px] text-muted-foreground">{team.round3Time ?? '-'}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant="outline" className="text-sm font-bold bg-primary/10 border-primary/20">
+                        {team.score}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {team.timeTaken || 'No Submissions'}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No teams have registered yet.
                   </TableCell>
                 </TableRow>

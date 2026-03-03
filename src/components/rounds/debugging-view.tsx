@@ -87,20 +87,26 @@ export function DebuggingView() {
   const endRound = useCallback(
     (isCorrect: boolean) => {
       const score = isCorrect ? 100 : 0;
+      const timestamp = new Date().toLocaleTimeString();
       const teamData = localStorage.getItem('currentTeam');
+      
       if (teamData) {
         const currentTeam: Team = JSON.parse(teamData);
-        const newTotalScore = (currentTeam.score || 0) + score;
-
         const leaderboardStr = localStorage.getItem('liveLeaderboard');
         let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
         const teamIndex = leaderboard.findIndex((t) => t.id === currentTeam.id);
+        
         if (teamIndex !== -1) {
-          leaderboard[teamIndex].score = newTotalScore;
+          const team = leaderboard[teamIndex];
+          team.round2Score = score;
+          team.round2Time = timestamp;
+          team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
+          team.timeTaken = timestamp;
+          
+          localStorage.setItem('currentTeam', JSON.stringify(team));
         }
 
         localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
-        localStorage.setItem('currentTeam', JSON.stringify({ ...currentTeam, score: newTotalScore }));
       }
 
       const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');

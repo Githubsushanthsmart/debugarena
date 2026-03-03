@@ -3,9 +3,15 @@ export type Team = {
   rank: number;
   name: string;
   college: string;
-  score: number;
-  timeTaken: string; // e.g., "01:23:45"
+  score: number; // Total score
+  timeTaken: string; // Aggregate or tie-breaker time (last submission timestamp)
   members?: string[];
+  round1Score?: number;
+  round1Time?: string;
+  round2Score?: number;
+  round2Time?: string;
+  round3Score?: number;
+  round3Time?: string;
 };
 
 export type MCQ = {

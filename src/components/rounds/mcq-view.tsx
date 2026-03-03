@@ -41,34 +41,39 @@ export function McqView() {
       }
     });
 
-    toast({
-      title: "Round Complete!",
-      description: `Your answers have been submitted.`,
-    });
-
+    const timestamp = new Date().toLocaleTimeString();
+    
     const teamData = localStorage.getItem('currentTeam');
     if (teamData) {
       const currentTeam: Team = JSON.parse(teamData);
       const leaderboardStr = localStorage.getItem('liveLeaderboard');
       let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
       
-      const teamIndex = leaderboard.findIndex((t: any) => t.id === currentTeam.id);
+      const teamIndex = leaderboard.findIndex((t: Team) => t.id === currentTeam.id);
       if (teamIndex !== -1) {
-        const newTotalScore = leaderboard[teamIndex].score + score;
-        leaderboard[teamIndex].score = newTotalScore;
+        const team = leaderboard[teamIndex];
+        team.round1Score = score;
+        team.round1Time = timestamp;
+        // Total score is sum of all rounds
+        team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
+        team.timeTaken = timestamp; // Track latest activity
         
-        const updatedTeam = { ...currentTeam, score: newTotalScore };
-        localStorage.setItem('currentTeam', JSON.stringify(updatedTeam));
+        localStorage.setItem('currentTeam', JSON.stringify(team));
       }
        localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
     }
-
 
     const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
     if (!completedRounds.includes('1')) {
         completedRounds.push('1');
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
+
+    toast({
+      title: "Round 1 Complete!",
+      description: `Score: ${score} points. Answers submitted.`,
+    });
+
     router.push('/dashboard');
   }, [router, answers, questions, toast]);
 

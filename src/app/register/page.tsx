@@ -34,7 +34,10 @@ export default function RegisterPage() {
         college: college.trim(),
         rank: 0,
         score: 0,
-        timeTaken: '00:00:00',
+        timeTaken: '',
+        round1Score: 0,
+        round2Score: 0,
+        round3Score: 0,
       };
       localStorage.setItem('currentTeam', JSON.stringify(teamInfo));
       localStorage.removeItem('completedRounds');
