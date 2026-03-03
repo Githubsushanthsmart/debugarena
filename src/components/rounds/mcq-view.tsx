@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import { McqSetSelector } from './mcq-set-selector';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '../ui/scroll-area';
-import { AlertCircle, ShieldAlert, Timer, Trophy } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Timer, Trophy, CheckCircle2 } from 'lucide-react';
 
 export function McqView() {
   const router = useRouter();
@@ -118,10 +118,11 @@ export function McqView() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
         <Card className="w-full max-w-4xl animate-fade-in border-primary/20">
           <CardHeader className="text-center border-b bg-muted/30 pb-8">
+            <Badge className="mx-auto mb-2 w-fit bg-accent/20 text-accent hover:bg-accent/30">ROUND 1</Badge>
             <CardTitle className="font-headline text-4xl text-primary mb-2">
-              Round 1: MCQ Challenge
+              Preliminary Round (EASY)
             </CardTitle>
-            <p className="text-muted-foreground italic">Please read the following instructions carefully.</p>
+            <p className="text-muted-foreground italic">Elimination Round - Filter basic debugging & coding skills.</p>
           </CardHeader>
           <CardContent className="pt-8">
             <ScrollArea className="h-[55vh] pr-6">
@@ -129,13 +130,12 @@ export function McqView() {
                 <section className="space-y-4">
                   <div className="flex items-center gap-2 text-xl font-headline text-foreground">
                     <Timer className="h-5 w-5 text-accent" />
-                    <h3>Timing & Duration</h3>
+                    <h3>Purpose & Structure</h3>
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>You have exactly <strong>15 minutes</strong> to complete all 20 questions.</li>
-                    <li>The timer starts as soon as you choose your question set.</li>
-                    <li>If the timer expires, your answers will be <strong>automatically submitted</strong>.</li>
-                    <li>Your completion duration is recorded and used as a primary <strong>tie-breaker</strong> on the leaderboard.</li>
+                    <li><strong>Participants:</strong> All registered participants.</li>
+                    <li><strong>Format:</strong> 3–4 easy debugging questions or 20 MCQs focusing on syntax errors + small logical mistakes.</li>
+                    <li><strong>Time Limit:</strong> 15 minutes. Submission after time ends will not be accepted.</li>
                   </ul>
                 </section>
 
@@ -147,9 +147,8 @@ export function McqView() {
                   <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
                     <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                       <li><strong>Tab Switching:</strong> Switching tabs or minimizing the window will trigger a system warning.</li>
-                      <li><strong>Right-Click & Shortcuts:</strong> Right-click, Copy, Paste, and Developer Tools shortcuts are strictly disabled.</li>
-                      <li><strong>Disqualification:</strong> After <strong>3 warnings</strong>, you will be automatically disqualified and removed from the leaderboard.</li>
-                      <li><strong>Device Lock:</strong> Only one device/login is permitted per team.</li>
+                      <li><strong>No External Help:</strong> ChatGPT, AI tools, or Internet usage is strictly forbidden.</li>
+                      <li><strong>Disqualification:</strong> After <strong>3 warnings</strong>, you will be automatically disqualified.</li>
                     </ul>
                   </div>
                 </section>
@@ -157,19 +156,18 @@ export function McqView() {
                 <section className="space-y-4">
                   <div className="flex items-center gap-2 text-xl font-headline text-foreground">
                     <Trophy className="h-5 w-5 text-primary" />
-                    <h3>Scoring & Format</h3>
+                    <h3>Selection Criteria</h3>
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Each correct answer is worth <strong>1 point</strong>.</li>
-                    <li>There is <strong>no negative marking</strong> for incorrect answers.</li>
-                    <li>You can move back and forth between questions using the navigation buttons.</li>
+                    <li>Top 40% or Top 10 teams will proceed to the Intermediate Round.</li>
+                    <li><strong>Tie-Breaker:</strong> Earlier submission wins in case of equal scores.</li>
                   </ul>
                 </section>
 
                 <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
                   <AlertCircle className="h-6 w-6 text-accent shrink-0" />
                   <p className="text-sm text-muted-foreground italic">
-                    By clicking "Start Round", you agree to abide by these rules. Any attempt to bypass the anti-cheating system will result in immediate disqualification without appeal.
+                    By clicking "Start Round", you agree to abide by these rules. Any attempt to bypass the anti-cheating system will result in immediate disqualification.
                   </p>
                 </div>
               </div>
@@ -178,7 +176,7 @@ export function McqView() {
               onClick={() => setRulesAccepted(true)}
               className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90"
             >
-              Start Round
+              Begin Preliminary Round
             </Button>
           </CardContent>
         </Card>
@@ -256,4 +254,14 @@ export function McqView() {
       </div>
     </div>
   );
+}
+
+const Badge = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <div className={cn("px-2 py-0.5 text-xs font-semibold rounded-full border", className)}>
+    {children}
+  </div>
+);
+
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(' ');
 }
