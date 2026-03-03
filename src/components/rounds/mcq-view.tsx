@@ -84,13 +84,9 @@ export function McqView() {
         localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
     }
 
-    toast({
-      title: "Round 1 Complete!",
-      description: `Score: ${score} points. Time taken: ${duration}.`,
-    });
-
+    // Navigation occurs immediately without a score toast, as requested.
     router.push('/dashboard');
-  }, [router, answers, questions, toast, selectedSet]);
+  }, [router, answers, questions, selectedSet]);
 
   const handleFinish = useCallback(() => {
     toast({ title: "Time's Up!", description: 'Your answers are being submitted automatically.' });
