@@ -4,7 +4,10 @@ import { PageWrapper } from '@/components/layout/page-wrapper';
 import { RoundCard } from '@/components/dashboard/round-card';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import type { Team } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 const initialRounds = [
   {
@@ -35,38 +38,45 @@ const initialRounds = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [rounds, setRounds] = useState(initialRounds);
-  const [team, setTeam] = useState<Team | null>(null);
+  const db = useFirestore();
+  const [teamId, setTeamId] = useState<string | null>(null);
 
   useEffect(() => {
-    const teamData = localStorage.getItem('currentTeam');
-    if (!teamData) {
+    const id = localStorage.getItem('currentTeamId');
+    if (!id) {
       router.replace('/register');
-      return;
+    } else {
+      setTeamId(id);
     }
-    setTeam(JSON.parse(teamData));
+  }, [router]);
 
-    const completedRoundsStr = localStorage.getItem('completedRounds');
-    const completedRounds = completedRoundsStr
-      ? JSON.parse(completedRoundsStr)
-      : [];
+  const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
+  const { data: team, isLoading: isTeamLoading } = useDoc<Team>(teamRef);
 
-    const storedAdminRoundsStr = localStorage.getItem('competitionRounds');
-    const storedAdminRounds = storedAdminRoundsStr ? JSON.parse(storedAdminRoundsStr) : null;
+  const roundsColRef = useMemoFirebase(() => collection(db, 'competitionRounds'), [db]);
+  const { data: adminRounds, isLoading: isRoundsLoading } = useCollection(roundsColRef);
+
+  const [displayRounds, setDisplayRounds] = useState(initialRounds);
+
+  useEffect(() => {
+    if (!team) return;
+
+    const completedRounds = [];
+    if (team.round1Score !== undefined && team.round1Time) completedRounds.push('1');
+    if (team.round2Score !== undefined && team.round2Time) completedRounds.push('2');
+    if (team.round3Score !== undefined && team.round3Time) completedRounds.push('3');
 
     const newRounds = initialRounds.map((r) => {
-      const adminConfig = storedAdminRounds?.find((ar: any) => ar.id === r.round);
+      const adminConfig = adminRounds?.find((ar: any) => ar.id === String(r.round));
 
       if (completedRounds.includes(String(r.round))) {
         return { ...r, status: 'Completed' as const };
       }
 
-      // If admin has explicitly locked the round, it stays locked
       if (adminConfig && adminConfig.isLocked) {
         return { ...r, status: 'Locked' as const };
       }
 
-      // Progression logic
       if (
         r.round === 1 ||
         (completedRounds.includes(String(r.round - 1)) &&
@@ -77,18 +87,23 @@ export default function DashboardPage() {
       return r;
     });
 
-    // Filter out inactive rounds if admin has hidden them
     const filteredRounds = newRounds.filter(r => {
-      const adminConfig = storedAdminRounds?.find((ar: any) => ar.id === r.round);
+      const adminConfig = adminRounds?.find((ar: any) => ar.id === String(r.round));
       return adminConfig ? adminConfig.isActive : true;
     });
 
-    setRounds(filteredRounds);
-  }, [router]);
+    setDisplayRounds(filteredRounds);
+  }, [team, adminRounds]);
 
-  if (!team) {
-    return null;
+  if (isTeamLoading || isRoundsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (!team) return null;
 
   return (
     <PageWrapper>
@@ -104,7 +119,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {rounds.map((round) => (
+        {displayRounds.map((round) => (
           <RoundCard key={round.round} {...round} />
         ))}
       </div>

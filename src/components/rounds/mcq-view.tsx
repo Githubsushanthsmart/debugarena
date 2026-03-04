@@ -15,16 +15,22 @@ import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
 import { useRouter } from 'next/navigation';
 import { McqSetSelector } from './mcq-set-selector';
-import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '../ui/scroll-area';
-import { AlertCircle, ShieldAlert, Timer, Trophy, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Timer, Trophy } from 'lucide-react';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function McqView() {
   const router = useRouter();
-  const { toast } = useToast();
+  const db = useFirestore();
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
   const startTimeRef = useRef<number | null>(null);
+
+  const teamId = typeof window !== 'undefined' ? localStorage.getItem('currentTeamId') : null;
+  const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
+  const { data: team } = useDoc<Team>(teamRef);
 
   const questions: MCQ[] = useMemo(() => {
     if (selectedSet === 'A') return mockMcqSetA;
@@ -49,6 +55,8 @@ export function McqView() {
   };
 
   const handleSubmit = useCallback(() => {
+    if (!team || !teamRef) return;
+
     const finishTime = Date.now();
     const durationMs = startTimeRef.current ? finishTime - startTimeRef.current : 0;
     const durationStr = formatDuration(durationMs);
@@ -61,33 +69,16 @@ export function McqView() {
       }
     });
 
-    const teamData = localStorage.getItem('currentTeam');
-    if (teamData) {
-      const currentTeam: Team = JSON.parse(teamData);
-      const leaderboardStr = localStorage.getItem('liveLeaderboard');
-      let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
-      
-      const teamIndex = leaderboard.findIndex((t: Team) => t.id === currentTeam.id);
-      if (teamIndex !== -1) {
-        const team = leaderboard[teamIndex];
-        team.round1Score = score;
-        team.round1Time = durationStr;
-        team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
-        team.timeTaken = timestamp;
-        
-        localStorage.setItem('currentTeam', JSON.stringify(team));
-      }
-       localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
-    }
-
-    const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
-    if (!completedRounds.includes('1')) {
-        completedRounds.push('1');
-        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
-    }
+    // Update Firestore for cloud sync
+    updateDocumentNonBlocking(teamRef, {
+      round1Score: score,
+      round1Time: durationStr,
+      score: score + (team.round2Score || 0) + (team.round3Score || 0),
+      timeTaken: timestamp
+    });
 
     router.push('/dashboard');
-  }, [router, answers, questions, selectedSet]);
+  }, [router, answers, questions, team, teamRef]);
 
   const handleFinish = useCallback(() => {
     handleSubmit();
@@ -134,8 +125,8 @@ export function McqView() {
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                     <li><strong>Participants:</strong> All registered participants.</li>
-                    <li><strong>Format:</strong> 3–4 easy debugging questions or 20 MCQs focusing on syntax errors + small logical mistakes.</li>
-                    <li><strong>Time Limit:</strong> 15 minutes. Submission after time ends will not be accepted.</li>
+                    <li><strong>Format:</strong> Syntax errors + small logical mistakes (MCQ).</li>
+                    <li><strong>Time Limit:</strong> 15 minutes. Automatic submission at deadline.</li>
                   </ul>
                 </section>
 
@@ -146,9 +137,9 @@ export function McqView() {
                   </div>
                   <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
                     <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                      <li><strong>Tab Switching:</strong> Switching tabs or minimizing the window will trigger a system warning.</li>
-                      <li><strong>No External Help:</strong> ChatGPT, AI tools, or Internet usage is strictly forbidden.</li>
-                      <li><strong>Disqualification:</strong> After <strong>3 warnings</strong>, you will be automatically disqualified.</li>
+                      <li><strong>Tab Switching:</strong> Strictly prohibited. Warnings issued.</li>
+                      <li><strong>No External Help:</strong> AI tools or internet usage results in ban.</li>
+                      <li><strong>Disqualification:</strong> Auto-submission after <strong>3 warnings</strong>.</li>
                     </ul>
                   </div>
                 </section>
@@ -159,15 +150,15 @@ export function McqView() {
                     <h3>Selection Criteria</h3>
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Top 40% or Top 10 teams will proceed to the Intermediate Round.</li>
-                    <li><strong>Tie-Breaker:</strong> Earlier submission wins in case of equal scores.</li>
+                    <li>Top teams proceed to the Intermediate Round.</li>
+                    <li><strong>Tie-Breaker:</strong> Faster completion time wins.</li>
                   </ul>
                 </section>
 
                 <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
                   <AlertCircle className="h-6 w-6 text-accent shrink-0" />
                   <p className="text-sm text-muted-foreground italic">
-                    By clicking "Start Round", you agree to abide by these rules. Any attempt to bypass the anti-cheating system will result in immediate disqualification.
+                    By clicking "Begin", you agree to the automated anti-cheat monitoring system.
                   </p>
                 </div>
               </div>
@@ -209,9 +200,9 @@ export function McqView() {
         onFinish={handleFinish}
       />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-gray-900/50 to-background">
-        <Card className="w-full max-w-2xl animate-fade-in">
+        <Card className="w-full max-w-2xl animate-fade-in shadow-2xl">
           <CardHeader>
-            <Progress value={progress} className="mb-4" />
+            <Progress value={progress} className="mb-4 h-2" />
             <CardTitle className="font-headline text-xl md:text-2xl leading-relaxed whitespace-pre-wrap">
               {currentQuestionIndex + 1}. {currentQuestion.question}
             </CardTitle>
@@ -226,7 +217,7 @@ export function McqView() {
                 <Label
                   key={index}
                   htmlFor={`option-${index}`}
-                  className="flex items-center p-4 border rounded-md cursor-pointer hover:bg-accent/10 has-[[data-state=checked]]:bg-accent/20 has-[[data-state=checked]]:border-accent transition-colors"
+                  className="flex items-center p-4 border rounded-md cursor-pointer hover:bg-accent/10 has-[[data-state=checked]]:bg-accent/20 has-[[data-state=checked]]:border-accent transition-all duration-200"
                 >
                   <RadioGroupItem value={String(index)} id={`option-${index}`} />
                   <span className="ml-4 text-base">{option}</span>
@@ -243,7 +234,7 @@ export function McqView() {
                   Previous
                 </Button>
               )}
-              <Button onClick={handleNext} className="flex-[2] text-lg py-6">
+              <Button onClick={handleNext} className="flex-[2] text-lg py-6 bg-primary hover:bg-primary/90">
                 {currentQuestionIndex < questions.length - 1
                   ? 'Next Question'
                   : 'Submit Answers'}
