@@ -4,7 +4,7 @@ import { PageWrapper } from '@/components/layout/page-wrapper';
 import { RoundCard } from '@/components/dashboard/round-card';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import type { Team } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
@@ -39,6 +39,7 @@ const initialRounds = [
 export default function DashboardPage() {
   const router = useRouter();
   const db = useFirestore();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const [teamId, setTeamId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,7 +54,8 @@ export default function DashboardPage() {
   const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
   const { data: team, isLoading: isTeamLoading } = useDoc<Team>(teamRef);
 
-  const roundsColRef = useMemoFirebase(() => collection(db, 'competitionRounds'), [db]);
+  // Ensure rounds query only happens when user is authenticated to avoid permission errors
+  const roundsColRef = useMemoFirebase(() => (!isAuthLoading && user) ? collection(db, 'competitionRounds') : null, [db, user, isAuthLoading]);
   const { data: adminRounds, isLoading: isRoundsLoading } = useCollection(roundsColRef);
 
   const [displayRounds, setDisplayRounds] = useState(initialRounds);
@@ -95,7 +97,7 @@ export default function DashboardPage() {
     setDisplayRounds(filteredRounds);
   }, [team, adminRounds]);
 
-  if (isTeamLoading || isRoundsLoading) {
+  if (isAuthLoading || isTeamLoading || isRoundsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />

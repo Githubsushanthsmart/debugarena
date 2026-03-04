@@ -24,12 +24,14 @@ import { Loader2, RefreshCw } from 'lucide-react';
 
 export default function AdminResultsPage() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const { toast } = useToast();
 
-  // Only attempt to query if the user is signed into Firebase Auth
-  const teamsColRef = useMemoFirebase(() => user ? collection(db, 'teams') : null, [db, user]);
-  const { data: rawTeams, isLoading } = useCollection<Team>(teamsColRef);
+  // Only attempt to query if the user is signed into Firebase Auth and loading is complete
+  const teamsColRef = useMemoFirebase(() => (!isAuthLoading && user) ? collection(db, 'teams') : null, [db, user, isAuthLoading]);
+  const { data: rawTeams, isLoading: isDataLoading } = useCollection<Team>(teamsColRef);
+
+  const isLoading = isAuthLoading || isDataLoading;
 
   const leaderboard = useMemo(() => {
     if (!rawTeams) return [];
@@ -76,7 +78,7 @@ export default function AdminResultsPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
           Live Leaderboard
-          {(isLoading || !user) && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+          {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
         </h1>
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={() => window.location.reload()}>
@@ -107,7 +109,7 @@ export default function AdminResultsPage() {
           <CardTitle>Real-Time Team Performance (Syncing Across All Devices)</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading || !user ? (
+          {isLoading ? (
             <div className="h-64 flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
               <p className="text-muted-foreground">Connecting to the real-time leaderboard...</p>
