@@ -39,7 +39,7 @@ const initialRounds = [
 export default function DashboardPage() {
   const router = useRouter();
   const db = useFirestore();
-  const { user, isUserLoading: isAuthLoading } = useUser();
+  const { isUserLoading: isAuthLoading, user } = useUser();
   const [teamId, setTeamId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function DashboardPage() {
   const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
   const { data: team, isLoading: isTeamLoading } = useDoc<Team>(teamRef);
 
-  const roundsColRef = useMemoFirebase(() => (!isAuthLoading && user) ? collection(db, 'competitionRounds') : null, [db, user, isAuthLoading]);
+  const roundsColRef = useMemoFirebase(() => user ? collection(db, 'competitionRounds') : null, [db, user]);
   const { data: adminRounds, isLoading: isRoundsLoading } = useCollection(roundsColRef);
 
   const [displayRounds, setDisplayRounds] = useState(initialRounds);
@@ -68,32 +68,32 @@ export default function DashboardPage() {
 
     const newRounds = initialRounds.map((r) => {
       const adminConfig = adminRounds?.find((ar: any) => ar.id === String(r.round));
-      
-      // Determine if this round is already finished
       let status: 'Locked' | 'Unlocked' | 'Completed' = 'Locked';
       
       if (r.round === 1) {
         if (isRound1Done) status = 'Completed';
-        else if (adminConfig && !adminConfig.isLocked) status = 'Unlocked';
+        else status = (adminConfig?.isLocked) ? 'Locked' : 'Unlocked';
       } 
       else if (r.round === 2) {
         if (isRound2Done) status = 'Completed';
-        else if (isRound1Done && adminConfig && !adminConfig.isLocked) status = 'Unlocked';
+        else if (isRound1Done) {
+          status = (adminConfig?.isLocked) ? 'Locked' : 'Unlocked';
+        } else {
+          status = 'Locked';
+        }
       } 
       else if (r.round === 3) {
         if (isRound3Done) status = 'Completed';
-        else if (isRound2Done && adminConfig && !adminConfig.isLocked) status = 'Unlocked';
-      }
-
-      // If admin has explicitly locked it, override status unless it's completed
-      if (status !== 'Completed' && adminConfig?.isLocked) {
-        status = 'Locked';
+        else if (isRound2Done) {
+          status = (adminConfig?.isLocked) ? 'Locked' : 'Unlocked';
+        } else {
+          status = 'Locked';
+        }
       }
 
       return { ...r, status };
     });
 
-    // Filter out inactive rounds based on admin config
     const filteredRounds = newRounds.filter(r => {
       const adminConfig = adminRounds?.find((ar: any) => ar.id === String(r.round));
       return adminConfig ? adminConfig.isActive : true;

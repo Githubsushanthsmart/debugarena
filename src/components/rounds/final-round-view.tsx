@@ -28,10 +28,14 @@ import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import type { Team, FinalProblem } from '@/lib/types';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function FinalRoundView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
+  const db = useFirestore();
   const { toast } = useToast();
   const [problem, setProblem] = useState<FinalProblem | null>(null);
   const [code, setCode] = useState('');
@@ -40,6 +44,10 @@ export function FinalRoundView() {
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const startTimeRef = useRef<number | null>(null);
+
+  const teamId = typeof window !== 'undefined' ? localStorage.getItem('currentTeamId') : null;
+  const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
+  const { data: team } = useDoc<Team>(teamRef);
 
   useEffect(() => {
     if (rulesAccepted && problem && !startTimeRef.current) {
@@ -57,8 +65,6 @@ export function FinalRoundView() {
   useEffect(() => {
     if (!rulesAccepted) return;
 
-    const teamData = localStorage.getItem('currentTeam');
-    const team: Team | null = teamData ? JSON.parse(teamData) : null;
     const assignedId = localStorage.getItem(`assignedFinalProblemId_${team?.id || 'anon'}`);
     let selectedProblem: FinalProblem | undefined;
 
@@ -83,7 +89,7 @@ export function FinalRoundView() {
       setProblem(selectedProblem);
       setCode(selectedProblem.buggyCode);
     }
-  }, [rulesAccepted]);
+  }, [rulesAccepted, team]);
 
   const handleRunCode = () => {
     if (!problem) return;
@@ -111,40 +117,24 @@ export function FinalRoundView() {
 
   const endRound = useCallback(
     (isCorrect: boolean) => {
+      if (!team || !teamRef) return;
+
       const finishTime = Date.now();
       const durationMs = startTimeRef.current ? finishTime - startTimeRef.current : 0;
       const durationStr = formatDuration(durationMs);
       const score = isCorrect ? 200 : 0;
       const timestamp = new Date().toLocaleTimeString();
-      const teamData = localStorage.getItem('currentTeam');
       
-      if (teamData) {
-        const currentTeam: Team = JSON.parse(teamData);
-        const leaderboardStr = localStorage.getItem('liveLeaderboard');
-        let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
-        const teamIndex = leaderboard.findIndex((t) => t.id === currentTeam.id);
-        
-        if (teamIndex !== -1) {
-          const team = leaderboard[teamIndex];
-          team.round3Score = score;
-          team.round3Time = durationStr;
-          team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
-          team.timeTaken = timestamp;
-          
-          localStorage.setItem('currentTeam', JSON.stringify(team));
-        }
+      updateDocumentNonBlocking(teamRef, {
+        round3Score: score,
+        round3Time: durationStr,
+        score: (team.round1Score || 0) + (team.round2Score || 0) + score,
+        timeTaken: timestamp
+      });
 
-        localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
-      }
-
-      const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
-      if (!completedRounds.includes('3')) {
-        completedRounds.push('3');
-        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
-      }
       router.push('/dashboard');
     },
-    [router]
+    [router, team, teamRef]
   );
   
   const handleSubmit = useCallback(() => {

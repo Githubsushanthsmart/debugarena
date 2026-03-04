@@ -27,10 +27,14 @@ import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import type { Team, DebuggingProblem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export function DebuggingView() {
   const [rulesAccepted, setRulesAccepted] = useState(false);
   const router = useRouter();
+  const db = useFirestore();
   const { toast } = useToast();
   const [problem, setProblem] = useState<DebuggingProblem | null>(null);
   const [code, setCode] = useState('');
@@ -41,6 +45,10 @@ export function DebuggingView() {
   const [isSolutionCorrect, setIsSolutionCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const startTimeRef = useRef<number | null>(null);
+
+  const teamId = typeof window !== 'undefined' ? localStorage.getItem('currentTeamId') : null;
+  const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
+  const { data: team } = useDoc<Team>(teamRef);
 
   useEffect(() => {
     if (rulesAccepted && problem && !startTimeRef.current) {
@@ -99,40 +107,24 @@ export function DebuggingView() {
 
   const endRound = useCallback(
     (isCorrect: boolean) => {
+      if (!team || !teamRef) return;
+
       const finishTime = Date.now();
       const durationMs = startTimeRef.current ? finishTime - startTimeRef.current : 0;
       const durationStr = formatDuration(durationMs);
       const score = isCorrect ? 100 : 0;
       const timestamp = new Date().toLocaleTimeString();
-      const teamData = localStorage.getItem('currentTeam');
       
-      if (teamData) {
-        const currentTeam: Team = JSON.parse(teamData);
-        const leaderboardStr = localStorage.getItem('liveLeaderboard');
-        let leaderboard: Team[] = leaderboardStr ? JSON.parse(leaderboardStr) : [];
-        const teamIndex = leaderboard.findIndex((t) => t.id === currentTeam.id);
-        
-        if (teamIndex !== -1) {
-          const team = leaderboard[teamIndex];
-          team.round2Score = score;
-          team.round2Time = durationStr;
-          team.score = (team.round1Score || 0) + (team.round2Score || 0) + (team.round3Score || 0);
-          team.timeTaken = timestamp;
-          
-          localStorage.setItem('currentTeam', JSON.stringify(team));
-        }
+      updateDocumentNonBlocking(teamRef, {
+        round2Score: score,
+        round2Time: durationStr,
+        score: (team.round1Score || 0) + score + (team.round3Score || 0),
+        timeTaken: timestamp
+      });
 
-        localStorage.setItem('liveLeaderboard', JSON.stringify(leaderboard));
-      }
-
-      const completedRounds = JSON.parse(localStorage.getItem('completedRounds') || '[]');
-      if (!completedRounds.includes('2')) {
-        completedRounds.push('2');
-        localStorage.setItem('completedRounds', JSON.stringify(completedRounds));
-      }
       router.push('/dashboard');
     },
-    [router]
+    [router, team, teamRef]
   );
 
   const handleSubmit = () => {
