@@ -13,37 +13,31 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Code2,
   ChevronDown,
-  LayoutDashboard,
   LogOut,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { Team } from '@/lib/types';
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const [team, setTeam] = useState<Team | null>(null);
+  const db = useFirestore();
 
-  useEffect(() => {
-    const teamData = localStorage.getItem('currentTeam');
-    if (teamData) {
-      setTeam(JSON.parse(teamData));
-    } else {
-      setTeam(null);
-    }
-  }, [pathname]); // re-check on navigation
+  const teamId = typeof window !== 'undefined' ? localStorage.getItem('currentTeamId') : null;
+  const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
+  const { data: team } = useDoc<Team>(teamRef);
 
   const navLinks = [{ href: '/dashboard', label: 'Dashboard' }];
 
   if (!team) {
-    // Render a simplified header if no team data
     return (
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center">
+        <div className="container flex h-14 max-w-screen-2xl items-center px-4">
           <div className="mr-4 flex items-center">
             <Link href="/" className="flex items-center space-x-2">
               <Code2 className="h-6 w-6 text-primary" />
@@ -58,17 +52,17 @@ export function Header() {
   const teamNameInitials = team.name
     .split(' ')
     .map((s) => s[0])
-    .join('');
+    .join('')
+    .toUpperCase();
 
   const handleLogout = () => {
-    localStorage.removeItem('currentTeam');
-    localStorage.removeItem('completedRounds');
+    localStorage.removeItem('currentTeamId');
     router.push('/register');
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+      <div className="container flex h-14 max-w-screen-2xl items-center px-4">
         <div className="mr-4 flex items-center">
           <Link href="/dashboard" className="flex items-center space-x-2">
             <Code2 className="h-6 w-6 text-primary" />
@@ -94,33 +88,33 @@ export function Header() {
         <div className="flex flex-1 items-center justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="flex items-center gap-2 h-9 px-2 md:px-4">
+                <Avatar className="h-7 w-7">
                   <AvatarImage
                     src={`https://picsum.photos/seed/${team.id}/32/32`}
                   />
                   <AvatarFallback>{teamNameInitials}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline">{team.name}</span>
-                <ChevronDown className="h-4 w-4" />
+                <span className="hidden md:inline max-w-[150px] truncate">{team.name}</span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel>
-                <p>{team.name}</p>
-                <p className="text-xs text-muted-foreground font-normal">
+                <p className="font-bold truncate">{team.name}</p>
+                <p className="text-xs text-muted-foreground font-normal truncate">
                   {team.college}
                 </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <Users className="mr-2 h-4 w-4" />
-                <span>
-                  {Array.isArray(team.members) ? team.members.join(', ') : ''}
+              <DropdownMenuItem className="cursor-default focus:bg-transparent">
+                <Users className="mr-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {team.members?.join(', ')}
                 </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

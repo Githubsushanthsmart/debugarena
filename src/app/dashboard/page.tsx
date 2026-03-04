@@ -44,17 +44,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const id = localStorage.getItem('currentTeamId');
-    if (!id) {
+    if (!id && !isAuthLoading) {
       router.replace('/register');
     } else {
       setTeamId(id);
     }
-  }, [router]);
+  }, [router, isAuthLoading]);
 
   const teamRef = useMemoFirebase(() => teamId ? doc(db, 'teams', teamId) : null, [db, teamId]);
   const { data: team, isLoading: isTeamLoading } = useDoc<Team>(teamRef);
 
-  // Ensure rounds query only happens when user is authenticated to avoid permission errors
   const roundsColRef = useMemoFirebase(() => (!isAuthLoading && user) ? collection(db, 'competitionRounds') : null, [db, user, isAuthLoading]);
   const { data: adminRounds, isLoading: isRoundsLoading } = useCollection(roundsColRef);
 
@@ -63,32 +62,38 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!team) return;
 
-    const completedRounds = [];
-    if (team.round1Score !== undefined && team.round1Time) completedRounds.push('1');
-    if (team.round2Score !== undefined && team.round2Time) completedRounds.push('2');
-    if (team.round3Score !== undefined && team.round3Time) completedRounds.push('3');
+    const isRound1Done = !!(team.round1Time);
+    const isRound2Done = !!(team.round2Time);
+    const isRound3Done = !!(team.round3Time);
 
     const newRounds = initialRounds.map((r) => {
       const adminConfig = adminRounds?.find((ar: any) => ar.id === String(r.round));
-
-      if (completedRounds.includes(String(r.round))) {
-        return { ...r, status: 'Completed' as const };
+      
+      // Determine if this round is already finished
+      let status: 'Locked' | 'Unlocked' | 'Completed' = 'Locked';
+      
+      if (r.round === 1) {
+        if (isRound1Done) status = 'Completed';
+        else if (adminConfig && !adminConfig.isLocked) status = 'Unlocked';
+      } 
+      else if (r.round === 2) {
+        if (isRound2Done) status = 'Completed';
+        else if (isRound1Done && adminConfig && !adminConfig.isLocked) status = 'Unlocked';
+      } 
+      else if (r.round === 3) {
+        if (isRound3Done) status = 'Completed';
+        else if (isRound2Done && adminConfig && !adminConfig.isLocked) status = 'Unlocked';
       }
 
-      if (adminConfig && adminConfig.isLocked) {
-        return { ...r, status: 'Locked' as const };
+      // If admin has explicitly locked it, override status unless it's completed
+      if (status !== 'Completed' && adminConfig?.isLocked) {
+        status = 'Locked';
       }
 
-      if (
-        r.round === 1 ||
-        (completedRounds.includes(String(r.round - 1)) &&
-          !completedRounds.includes(String(r.round)))
-      ) {
-        return { ...r, status: 'Unlocked' as const };
-      }
-      return r;
+      return { ...r, status };
     });
 
+    // Filter out inactive rounds based on admin config
     const filteredRounds = newRounds.filter(r => {
       const adminConfig = adminRounds?.find((ar: any) => ar.id === String(r.round));
       return adminConfig ? adminConfig.isActive : true;
@@ -109,7 +114,7 @@ export default function DashboardPage() {
 
   return (
     <PageWrapper>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold">
             Welcome, {team.name}!
