@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
@@ -31,11 +32,19 @@ export default function AdminRoundsPage() {
   const roundsColRef = useMemoFirebase(() => user ? collection(db, 'competitionRounds') : null, [db, user]);
   const { data: firestoreRounds, isLoading } = useCollection<RoundConfig>(roundsColRef);
 
-  const rounds = firestoreRounds?.length ? firestoreRounds : DEFAULT_ROUNDS;
+  // Merge cloud data with defaults to ensure all 3 rounds are always listed
+  const rounds = useMemo(() => {
+    return DEFAULT_ROUNDS.map(defaultRound => {
+      const cloudRound = firestoreRounds?.find(r => r.id === defaultRound.id);
+      return cloudRound ? { ...defaultRound, ...cloudRound } : defaultRound;
+    });
+  }, [firestoreRounds]);
 
   const updateRoundInCloud = (round: RoundConfig) => {
     const roundRef = doc(db, 'competitionRounds', round.id);
-    setDocumentNonBlocking(roundRef, round, { merge: true });
+    // Ensure we send a clean object without the internal __memo or id properties if present
+    const { ...payload } = round;
+    setDocumentNonBlocking(roundRef, payload, { merge: true });
     
     toast({
       title: "Syncing...",
