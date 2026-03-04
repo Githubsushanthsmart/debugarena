@@ -298,6 +298,52 @@ export const mockMcqSetB: MCQ[] = [
   },
 ];
 
+export const mockMcqSetC: MCQ[] = [
+  { id: 'mcq-c-1', question: 'Which data structure uses FIFO (First In First Out) principle?', options: ['Stack', 'Queue', 'Tree', 'Heap'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-2', question: 'Which traversal method visits root → left → right?', options: ['Inorder', 'Preorder', 'Postorder', 'Level order'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-3', question: 'In a stack, insertion operation is called:', options: ['Enqueue', 'Push', 'Insert', 'Append'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-4', question: 'Which structure represents hierarchical data?', options: ['Array', 'Tree', 'Stack', 'Queue'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-5', question: 'Worst case complexity of linear search:', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], correctAnswerIndex: 2 },
+  { id: 'mcq-c-6', question: 'Binary search tree property:', options: ['Left child > parent', 'Right child < parent', 'Left child < parent < right child', 'All nodes equal'], correctAnswerIndex: 2 },
+  { id: 'mcq-c-7', question: 'Which traversal uses a queue?', options: ['BFS', 'DFS', 'Inorder', 'Postorder'], correctAnswerIndex: 0 },
+  { id: 'mcq-c-8', question: 'Stack overflow occurs when:', options: ['Stack empty', 'Stack full', 'Stack half full', 'Stack reversed'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-9', question: 'Best case complexity of binary search:', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], correctAnswerIndex: 0 },
+  { id: 'mcq-c-10', question: 'Heap is a type of:', options: ['Binary Tree', 'Graph', 'Linked List', 'Array only'], correctAnswerIndex: 0 },
+  { id: 'mcq-c-11', question: 'Recursion mainly uses:', options: ['Queue', 'Stack', 'Heap', 'Array'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-12', question: 'In adjacency matrix representation of graph with n vertices:', options: ['n', 'n²', 'n log n', '2n'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-13', question: 'Insertion at end of linked list takes:', options: ['O(1)', 'O(n)', 'O(log n)', 'O(n²)'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-14', question: 'Hash tables mainly help in:', options: ['Searching', 'Sorting', 'Traversal', 'Deleting'], correctAnswerIndex: 0 },
+  { id: 'mcq-c-15', question: 'Worst case search in BST occurs when tree becomes:', options: ['Balanced', 'Complete', 'Skewed', 'Perfect'], correctAnswerIndex: 2 },
+  { id: 'mcq-c-16', question: 'push(5)\npush(10)\npush(15)\npop()\npush(20)\ntop()\nOutput?', options: ['5', '10', '15', '20'], correctAnswerIndex: 3 },
+  { id: 'mcq-c-17', question: 'enqueue(4)\nenqueue(8)\nenqueue(12)\ndequeue()\nenqueue(16)\nfront()\nOutput?', options: ['4', '8', '12', '16'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-18', question: 'for i = 1 to n:\n   for j = 1 to n:\n       print(i,j)\nTime complexity?', options: ['O(n)', 'O(n²)', 'O(n log n)', 'O(n³)'], correctAnswerIndex: 1 },
+  { id: 'mcq-c-19', question: 'function f(n):\n    if n==1:\n        return 1\n    return n * f(n-1)\n\nprint(f(4))\nOutput?', options: ['12', '16', '24', '32'], correctAnswerIndex: 2 },
+  { id: 'mcq-c-20', question: 'Maximum nodes at level k in a binary tree:', options: ['k', '2^k', 'k²', 'n'], correctAnswerIndex: 1 },
+];
+
+export const mockMcqSetD: MCQ[] = [
+  { id: 'mcq-d-1', question: 'Which data structure follows LIFO principle?', options: ['Stack', 'Queue', 'Graph', 'Tree'], correctAnswerIndex: 0 },
+  { id: 'mcq-d-2', question: 'Which node has no children in a tree?', options: ['Root', 'Parent', 'Leaf', 'Edge'], correctAnswerIndex: 2 },
+  { id: 'mcq-d-3', question: 'Queue insertion operation is called:', options: ['Push', 'Enqueue', 'Insert', 'Append'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-4', question: 'Binary tree maximum children:', options: ['1', '2', '3', 'n'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-5', question: 'Average complexity of binary search:', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-6', question: 'DFS uses:', options: ['Queue', 'Stack', 'Heap', 'Array'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-7', question: 'Graph traversal using queue:', options: ['DFS', 'BFS', 'Inorder', 'Postorder'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-8', question: 'Height of tree with single node:', options: ['0', '1', '2', 'n'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-9', question: 'Priority queue is implemented using:', options: ['Heap', 'Stack', 'Linked list', 'Queue'], correctAnswerIndex: 0 },
+  { id: 'mcq-d-10', question: 'Worst case complexity of quicksort:', options: ['O(n log n)', 'O(n²)', 'O(log n)', 'O(n)'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-11', question: 'Hash table collision occurs when:', options: ['Two keys map to same index', 'Array full', 'Hash empty', 'Graph full'], correctAnswerIndex: 0 },
+  { id: 'mcq-d-12', question: 'Traversal that gives sorted order in BST:', options: ['Preorder', 'Inorder', 'Postorder', 'Level order'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-13', question: 'Balanced tree search complexity:', options: ['O(log n)', 'O(n)', 'O(n²)', 'O(1)'], correctAnswerIndex: 0 },
+  { id: 'mcq-d-14', question: 'Space complexity of adjacency matrix:', options: ['O(n)', 'O(n²)', 'O(log n)', 'O(n log n)'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-15', question: 'Queue removal operation:', options: ['Pop', 'Dequeue', 'Delete', 'Remove'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-16', question: 'push(2)\npush(4)\npush(6)\npop()\npush(8)\npop()\ntop()\nOutput?', options: ['2', '4', '6', '8'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-17', question: 'enqueue(7)\nenqueue(14)\nenqueue(21)\ndequeue()\nenqueue(28)\ndequeue()\nfront()\nOutput?', options: ['7', '14', '21', '28'], correctAnswerIndex: 2 },
+  { id: 'mcq-d-18', question: 'for i=1 to n:\n   for j=1 to i:\n       for k=1 to i:\n            print()\nTime complexity?', options: ['O(n²)', 'O(n³)', 'O(n log n)', 'O(n⁴)'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-19', question: 'function f(n):\n   if n==0:\n       return 0\n   return 1 + f(n-1)\n\nprint(f(5))\nOutput?', options: ['4', '5', '6', '10'], correctAnswerIndex: 1 },
+  { id: 'mcq-d-20', question: 'A perfect binary tree with 63 nodes has height:', options: ['5', '6', '7', '8'], correctAnswerIndex: 1 },
+];
+
 
 export const mockDebuggingProblems: DebuggingProblem[] = [
   // Python
@@ -514,15 +560,16 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
         }
         k++;
     }
+    int kRemaining = k;
     while (i < n1) {
-        arr[k] = L[i];
+        arr[kRemaining] = L[i];
         i++;
-        k++;
+        kRemaining++;
     }
     while (j < n2) {
-        arr[k] = R[j];
+        arr[kRemaining] = R[j];
         j++;
-        k++;
+        kRemaining++;
     }
 }`,
     buggyOutput: 'Incorrect Output. The temporary arrays L and R are not populated with data from the main array before merging.'

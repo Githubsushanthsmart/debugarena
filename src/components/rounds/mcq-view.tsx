@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { mockMcqSetA, mockMcqSetB } from '@/lib/mock-data';
+import { mockMcqSetA, mockMcqSetB, mockMcqSetC, mockMcqSetD } from '@/lib/mock-data';
 import type { MCQ, Team } from '@/lib/types';
 import { RoundHeader } from '@/components/rounds/round-header';
 import { useAntiCheat } from '@/hooks/use-anti-cheat';
@@ -25,7 +25,7 @@ export function McqView() {
   const router = useRouter();
   const db = useFirestore();
   const [rulesAccepted, setRulesAccepted] = useState(false);
-  const [selectedSet, setSelectedSet] = useState<'A' | 'B' | null>(null);
+  const [selectedSet, setSelectedSet] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
   const teamId = typeof window !== 'undefined' ? localStorage.getItem('currentTeamId') : null;
@@ -33,9 +33,13 @@ export function McqView() {
   const { data: team } = useDoc<Team>(teamRef);
 
   const questions: MCQ[] = useMemo(() => {
-    if (selectedSet === 'A') return mockMcqSetA;
-    if (selectedSet === 'B') return mockMcqSetB;
-    return [];
+    switch (selectedSet) {
+      case 'A': return mockMcqSetA;
+      case 'B': return mockMcqSetB;
+      case 'C': return mockMcqSetC;
+      case 'D': return mockMcqSetD;
+      default: return [];
+    }
   }, [selectedSet]);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -107,7 +111,7 @@ export function McqView() {
   if (!rulesAccepted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
-        <Card className="w-full max-w-4xl animate-fade-in border-primary/20">
+        <Card className="w-full max-w-4xl animate-fade-in border-primary/20 shadow-2xl">
           <CardHeader className="text-center border-b bg-muted/30 pb-8">
             <Badge className="mx-auto mb-2 w-fit bg-accent/20 text-accent hover:bg-accent/30">ROUND 1</Badge>
             <CardTitle className="font-headline text-4xl text-primary mb-2">
@@ -123,9 +127,9 @@ export function McqView() {
                     <Timer className="h-5 w-5 text-accent" />
                     <h3>Purpose & Structure</h3>
                   </div>
-                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li><strong>Participants:</strong> All registered participants.</li>
-                    <li><strong>Format:</strong> Syntax errors + small logical mistakes (MCQ).</li>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground text-base">
+                    <li><strong>Format:</strong> 20 MCQs focused on Syntax errors + logical mistakes.</li>
+                    <li><strong>Question Sets:</strong> Choose from Sets A, B, C, or D (Randomly assigned).</li>
                     <li><strong>Time Limit:</strong> 15 minutes. Automatic submission at deadline.</li>
                   </ul>
                 </section>
@@ -136,7 +140,7 @@ export function McqView() {
                     <h3>Anti-Cheating Policy</h3>
                   </div>
                   <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
-                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground text-base">
                       <li><strong>Tab Switching:</strong> Strictly prohibited. Warnings issued.</li>
                       <li><strong>No External Help:</strong> AI tools or internet usage results in ban.</li>
                       <li><strong>Disqualification:</strong> Auto-submission after <strong>3 warnings</strong>.</li>
@@ -149,16 +153,16 @@ export function McqView() {
                     <Trophy className="h-5 w-5 text-primary" />
                     <h3>Selection Criteria</h3>
                   </div>
-                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Top teams proceed to the Intermediate Round.</li>
-                    <li><strong>Tie-Breaker:</strong> Faster completion time wins.</li>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground text-base">
+                    <li>Scores will be saved immediately to the cloud leaderboard.</li>
+                    <li><strong>Tie-Breaker:</strong> Faster completion time wins (captured to the millisecond).</li>
                   </ul>
                 </section>
 
                 <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
                   <AlertCircle className="h-6 w-6 text-accent shrink-0" />
                   <p className="text-sm text-muted-foreground italic">
-                    By clicking "Begin", you agree to the automated anti-cheat monitoring system.
+                    By clicking "Begin", you agree to the automated anti-cheat monitoring system and the competition guidelines.
                   </p>
                 </div>
               </div>
@@ -180,7 +184,7 @@ export function McqView() {
       <div className="flex flex-col h-screen">
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 max-w-screen-2xl items-center px-4 justify-center">
-                 <h1 className="text-lg font-semibold font-headline">MCQ Round</h1>
+                 <h1 className="text-lg font-semibold font-headline">MCQ Round - Select Question Set</h1>
             </div>
         </header>
         <McqSetSelector onSelectSet={setSelectedSet} />
@@ -200,11 +204,15 @@ export function McqView() {
         onFinish={handleFinish}
       />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-gray-900/50 to-background">
-        <Card className="w-full max-w-2xl animate-fade-in shadow-2xl">
+        <Card className="w-full max-w-2xl animate-fade-in shadow-2xl border-primary/10">
           <CardHeader>
             <Progress value={progress} className="mb-4 h-2" />
+            <div className="flex justify-between items-center mb-2">
+               <span className="text-sm font-medium text-muted-foreground">Question {currentQuestionIndex + 1} of {questions.length}</span>
+               <span className="text-xs font-headline font-bold text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded">Set {selectedSet}</span>
+            </div>
             <CardTitle className="font-headline text-xl md:text-2xl leading-relaxed whitespace-pre-wrap">
-              {currentQuestionIndex + 1}. {currentQuestion.question}
+              {currentQuestion.question}
             </CardTitle>
           </CardHeader>
           <CardContent>
