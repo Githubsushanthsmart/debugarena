@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
@@ -25,12 +25,12 @@ const DEFAULT_ROUNDS: RoundConfig[] = [
 
 export default function AdminRoundsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
-  const roundsColRef = useMemoFirebase(() => collection(db, 'competitionRounds'), [db]);
+  const roundsColRef = useMemoFirebase(() => user ? collection(db, 'competitionRounds') : null, [db, user]);
   const { data: firestoreRounds, isLoading } = useCollection<RoundConfig>(roundsColRef);
 
-  // If collection is empty, the UI will show nothing until we seed it or use defaults
   const rounds = firestoreRounds?.length ? firestoreRounds : DEFAULT_ROUNDS;
 
   const updateRoundInCloud = (round: RoundConfig) => {
@@ -61,7 +61,7 @@ export default function AdminRoundsPage() {
     <div className="p-4 md:p-8">
       <h1 className="text-3xl font-bold font-headline mb-8 flex items-center gap-2">
         Configure Rounds
-        {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+        {(isLoading || !user) && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
       </h1>
       
       <Card className="border-primary/10">
@@ -70,50 +70,57 @@ export default function AdminRoundsPage() {
           <p className="text-sm text-muted-foreground">Changes here take effect immediately for all participants worldwide.</p>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Round</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Is Locked</TableHead>
-                <TableHead>Is Active</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rounds.sort((a,b) => a.id.localeCompare(b.id)).map((round) => (
-                <TableRow key={round.id}>
-                  <TableCell className="font-medium">{round.title}</TableCell>
-                  <TableCell>
-                    <Badge variant={round.isActive ? "default" : "secondary"}>
-                      {round.isActive ? "Live" : "Hidden"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Switch 
-                        checked={round.isLocked} 
-                        onCheckedChange={() => toggleLocked(round.id)}
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {round.isLocked ? "Locked" : "Unlocked"}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Switch 
-                        checked={round.isActive} 
-                        onCheckedChange={() => toggleActive(round.id)}
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {round.isActive ? "Visible" : "Hidden"}
-                      </span>
-                    </div>
-                  </TableCell>
+          {isLoading || !user ? (
+            <div className="h-32 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+               <Loader2 className="h-8 w-8 animate-spin" />
+               <p>Connecting to round configurations...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Round</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Is Locked</TableHead>
+                  <TableHead>Is Active</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {rounds.sort((a,b) => a.id.localeCompare(b.id)).map((round) => (
+                  <TableRow key={round.id}>
+                    <TableCell className="font-medium">{round.title}</TableCell>
+                    <TableCell>
+                      <Badge variant={round.isActive ? "default" : "secondary"}>
+                        {round.isActive ? "Live" : "Hidden"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={round.isLocked} 
+                          onCheckedChange={() => toggleLocked(round.id)}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {round.isLocked ? "Locked" : "Unlocked"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={round.isActive} 
+                          onCheckedChange={() => toggleActive(round.id)}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {round.isActive ? "Visible" : "Hidden"}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

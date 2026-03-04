@@ -18,15 +18,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Loader2, RefreshCw } from 'lucide-react';
 
 export default function AdminResultsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
-  const teamsColRef = useMemoFirebase(() => collection(db, 'teams'), [db]);
+  // Only attempt to query if the user is signed into Firebase Auth
+  const teamsColRef = useMemoFirebase(() => user ? collection(db, 'teams') : null, [db, user]);
   const { data: rawTeams, isLoading } = useCollection<Team>(teamsColRef);
 
   const leaderboard = useMemo(() => {
@@ -34,9 +36,11 @@ export default function AdminResultsPage() {
     
     return [...rawTeams]
       .sort((a, b) => {
+        // Sort by total score descending
         if ((b.score || 0) !== (a.score || 0)) {
           return (b.score || 0) - (a.score || 0);
         }
+        // Tie-breaker: Combine durations or use the last round's time
         const timeA = a.round3Time || a.round2Time || a.round1Time || '99:99';
         const timeB = b.round3Time || b.round2Time || b.round1Time || '99:99';
         return timeA.localeCompare(timeB);
@@ -62,7 +66,7 @@ export default function AdminResultsPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to clear records."
+        description: "Failed to clear records. Ensure you have proper permissions."
       });
     }
   };
@@ -72,7 +76,7 @@ export default function AdminResultsPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
           Live Leaderboard
-          {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+          {(isLoading || !user) && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
         </h1>
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={() => window.location.reload()}>
@@ -103,10 +107,10 @@ export default function AdminResultsPage() {
           <CardTitle>Real-Time Team Performance (Syncing Across All Devices)</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoading || !user ? (
             <div className="h-64 flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground">Fetching live results from Firestore...</p>
+              <p className="text-muted-foreground">Connecting to the real-time leaderboard...</p>
             </div>
           ) : (
             <Table>
