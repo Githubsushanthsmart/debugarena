@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -20,14 +21,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function AdminResultsPage() {
   const db = useFirestore();
   const { user, isUserLoading: isAuthLoading } = useUser();
   const { toast } = useToast();
 
-  // Only attempt to query if the user is signed into Firebase Auth and loading is complete
   const teamsColRef = useMemoFirebase(() => (!isAuthLoading && user) ? collection(db, 'teams') : null, [db, user, isAuthLoading]);
   const { data: rawTeams, isLoading: isDataLoading } = useCollection<Team>(teamsColRef);
 
@@ -38,17 +39,24 @@ export default function AdminResultsPage() {
     
     return [...rawTeams]
       .sort((a, b) => {
-        // Sort by total score descending
         if ((b.score || 0) !== (a.score || 0)) {
           return (b.score || 0) - (a.score || 0);
         }
-        // Tie-breaker: Combine durations or use the last round's time
         const timeA = a.round3Time || a.round2Time || a.round1Time || '99:99';
         const timeB = b.round3Time || b.round2Time || b.round1Time || '99:99';
         return timeA.localeCompare(timeB);
       })
       .map((team, index) => ({ ...team, rank: index + 1 }));
   }, [rawTeams]);
+
+  const handleDeleteTeam = (teamId: string, teamName: string) => {
+    const teamRef = doc(db, 'teams', teamId);
+    deleteDocumentNonBlocking(teamRef);
+    toast({
+      title: "Team Deleted",
+      description: `${teamName} has been removed from the competition.`,
+    });
+  };
 
   const handleClearLeaderboard = async () => {
     if (!rawTeams) return;
@@ -68,7 +76,7 @@ export default function AdminResultsPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to clear records. Ensure you have proper permissions."
+        description: "Failed to clear records."
       });
     }
   };
@@ -86,13 +94,13 @@ export default function AdminResultsPage() {
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-               <Button variant="destructive">Reset All Cloud Records</Button>
+               <Button variant="destructive">Reset All Records</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action will PERMANENTLY delete all teams and scores from the Firebase database. This cannot be undone.
+                  This will PERMANENTLY delete ALL teams and scores.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -106,25 +114,25 @@ export default function AdminResultsPage() {
 
       <Card className="border-primary/10">
         <CardHeader>
-          <CardTitle>Real-Time Team Performance (Syncing Across All Devices)</CardTitle>
+          <CardTitle>Real-Time Performance</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="h-64 flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground">Connecting to the real-time leaderboard...</p>
+              <p className="text-muted-foreground">Connecting...</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">Rank</TableHead>
-                  <TableHead>Team & College</TableHead>
-                  <TableHead className="text-center">R1 (MCQ)</TableHead>
-                  <TableHead className="text-center">R2 (Debug)</TableHead>
-                  <TableHead className="text-center">R3 (Final)</TableHead>
-                  <TableHead className="text-right">Total Score</TableHead>
-                  <TableHead className="text-right">Last Submission</TableHead>
+                  <TableHead>Team</TableHead>
+                  <TableHead className="text-center">R1</TableHead>
+                  <TableHead className="text-center">R2</TableHead>
+                  <TableHead className="text-center">R3</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -136,7 +144,7 @@ export default function AdminResultsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{team.name}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{team.college}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase">{team.college}</div>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="font-bold">{team.round1Score ?? 0}</div>
@@ -155,18 +163,35 @@ export default function AdminResultsPage() {
                           {team.score || 0}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right text-xs font-mono text-muted-foreground">
-                        {team.timeTaken || '-'}
+                      <TableCell className="text-right">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete {team.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove this team's records permanently.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteTeam(team.id, team.name)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="h-64 text-center">
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin opacity-20" />
-                        <p>Waiting for teams to register and submit...</p>
-                      </div>
+                      <p className="text-muted-foreground">No teams registered yet.</p>
                     </TableCell>
                   </TableRow>
                 )}
