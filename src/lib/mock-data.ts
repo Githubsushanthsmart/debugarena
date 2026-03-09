@@ -427,6 +427,75 @@ export const mockDebuggingProblems: DebuggingProblem[] = [
     return helper(root, float('-inf'), float('inf'))`,
     buggyOutput: 'Incorrect output. The recursive check uses "or" instead of "and", allowing invalid BSTs to pass.'
   },
+  {
+    id: 'dbg-py-4',
+    title: 'Find the Bug: Fibonacci Sequence',
+    language: 'python',
+    description: 'This function generates the first n numbers of the Fibonacci sequence. It contains a logical error in how the next number is calculated.',
+    buggyCode: `def fibonacci(n):
+    if n <= 0: return []
+    if n == 1: return [0]
+    seq = [0, 1]
+    while len(seq) < n:
+        seq.append(seq[-1] + seq[1]) # Error here
+    return seq`,
+    solutionCode: `def fibonacci(n):
+    if n <= 0: return []
+    if n == 1: return [0]
+    seq = [0, 1]
+    while len(seq) < n:
+        seq.append(seq[-1] + seq[-2])
+    return seq`,
+    buggyOutput: 'Incorrect output. The sequence generated does not follow the Fibonacci rule (sum of two previous numbers).'
+  },
+  {
+    id: 'dbg-py-5',
+    title: 'Find the Bug: List Average',
+    language: 'python',
+    description: 'This function calculates the average of a list of numbers but fails to handle empty lists properly.',
+    buggyCode: `def calculate_average(nums):
+    total = sum(nums)
+    return total / len(nums)`,
+    solutionCode: `def calculate_average(nums):
+    if not nums: return 0
+    total = sum(nums)
+    return total / len(nums)`,
+    buggyOutput: 'Error: ZeroDivisionError: division by zero. The function crashes when an empty list is provided.'
+  },
+  {
+    id: 'dbg-py-6',
+    title: 'Find the Bug: Maximum Value',
+    language: 'python',
+    description: 'This function finds the maximum value in a list but fails when all numbers are negative.',
+    buggyCode: `def find_max(nums):
+    max_val = 0
+    for n in nums:
+        if n > max_val:
+            max_val = n
+    return max_val`,
+    solutionCode: `def find_max(nums):
+    if not nums: return None
+    max_val = nums[0]
+    for n in nums:
+        if n > max_val:
+            max_val = n
+    return max_val`,
+    buggyOutput: 'Incorrect output. For an input of [-5, -2, -10], the output is 0, which is incorrect.'
+  },
+  {
+    id: 'dbg-py-7',
+    title: 'Find the Bug: List Filtering',
+    language: 'python',
+    description: 'This function removes all even numbers from a list. It contains a common mistake related to modifying a list while iterating over it.',
+    buggyCode: `def remove_evens(nums):
+    for n in nums:
+        if n % 2 == 0:
+            nums.remove(n)
+    return nums`,
+    solutionCode: `def remove_evens(nums):
+    return [n for n in nums if n % 2 != 0]`,
+    buggyOutput: 'Incorrect output. Some even numbers are skipped because the list indices shift during removal.'
+  },
   // Java
   {
     id: 'dbg-java-1',
