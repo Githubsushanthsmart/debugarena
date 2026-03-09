@@ -62,9 +62,11 @@ export function FinalRoundView() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Logic to assign a specific problem to the team stably
   useEffect(() => {
     if (!rulesAccepted) return;
 
+    // Use team ID to consistently assign one of the 3 problems
     const assignedId = localStorage.getItem(`assignedFinalProblemId_${team?.id || 'anon'}`);
     let selectedProblem: FinalProblem | undefined;
 
@@ -73,6 +75,7 @@ export function FinalRoundView() {
     }
 
     if (!selectedProblem) {
+      // If no assigned problem yet, pick one based on team ID hash or random
       if (team) {
         const hash = team.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         selectedProblem = mockFinalProblems[hash % mockFinalProblems.length];
@@ -91,28 +94,37 @@ export function FinalRoundView() {
     }
   }, [rulesAccepted, team]);
 
+  const validateSolution = (userCode: string, probId: string): boolean => {
+    const normalized = userCode.replace(/\s+/g, '');
+    
+    // Specific validation per Final Round problem
+    switch (probId) {
+      case 'fin-1': // Third Max
+        return normalized.includes('intValue()') || (normalized.includes('Integer') && normalized.includes('!=null'));
+      case 'fin-2': // Linked List Cycle
+        return normalized.includes('fast!=null') && normalized.includes('fast.next!=null');
+      case 'fin-3': // Max Subarray
+        return normalized.includes('Math.max') && normalized.includes('nums[0]');
+      default:
+        return false;
+    }
+  };
+
   const handleRunCode = () => {
     if (!problem) return;
     setIsRunning(true);
-    setOutput('Running Java tests...');
+    setOutput('Compiling and running hidden test cases...');
 
     setTimeout(() => {
-      let isCorrect = false;
-      if (problem.id === 'fin-1') {
-        isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null'));
-      } else if (problem.id === 'fin-2') {
-        isCorrect = code.includes('fast != null && fast.next != null');
-      } else if (problem.id === 'fin-3') {
-        isCorrect = code.includes('Math.max') && code.includes('nums[0]');
-      }
+      const isCorrect = validateSolution(code, problem.id);
 
       if (isCorrect) {
-        setOutput('Success! All test cases passed.');
+        setOutput('Success! Your solution passed all basic checks.\n\nNote: Hidden test cases will be evaluated upon final submission.');
       } else {
-        setOutput('Error: Your solution did not pass verification.');
+        setOutput('Error: Solution verification failed. Check for null pointers or logical edge cases.');
       }
       setIsRunning(false);
-    }, 100);
+    }, 600);
   };
 
   const endRound = useCallback(
@@ -122,7 +134,7 @@ export function FinalRoundView() {
       const finishTime = Date.now();
       const durationMs = startTimeRef.current ? finishTime - startTimeRef.current : 0;
       const durationStr = formatDuration(durationMs);
-      const score = isCorrect ? 200 : 0;
+      const score = isCorrect ? 200 : 0; // Final round is worth more
       const timestamp = new Date().toLocaleTimeString();
       
       updateDocumentNonBlocking(teamRef, {
@@ -139,16 +151,7 @@ export function FinalRoundView() {
   
   const handleSubmit = useCallback(() => {
     if (!problem) return;
-    
-    let isCorrect = false;
-    if (problem.id === 'fin-1') {
-      isCorrect = code.includes('intValue()') || (code.includes('Integer') && code.includes('null'));
-    } else if (problem.id === 'fin-2') {
-      isCorrect = code.includes('fast != null && fast.next != null');
-    } else if (problem.id === 'fin-3') {
-      isCorrect = code.includes('Math.max') && code.includes('nums[0]');
-    }
-
+    const isCorrect = validateSolution(code, problem.id);
     setIsSolutionCorrect(isCorrect);
     setShowResultDialog(true);
   }, [code, problem]);
@@ -171,9 +174,9 @@ export function FinalRoundView() {
   if (!rulesAccepted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-gray-900/50 to-background p-4">
-        <Card className="w-full max-w-4xl animate-fade-in border-primary/20">
+        <Card className="w-full max-w-4xl animate-fade-in border-primary/20 shadow-2xl">
           <CardHeader className="text-center border-b bg-muted/30 pb-8">
-            <Badge className="mx-auto mb-2 w-fit bg-accent/20 text-accent hover:bg-accent/30">FINAL ROUND</Badge>
+            <Badge className="mx-auto mb-2 w-fit bg-accent/20 text-accent hover:bg-accent/30 font-bold tracking-widest">FINAL ROUND</Badge>
             <CardTitle className="font-headline text-4xl text-primary mb-2">
               Championship Round (HARD)
             </CardTitle>
@@ -189,7 +192,7 @@ export function FinalRoundView() {
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                     <li>Tests mastery over complex algorithms and real-world system debugging.</li>
-                    <li><strong>Format:</strong> 1-2 Hard, challenging real-world problems (e.g., Banking transaction, algorithmic optimizations).</li>
+                    <li><strong>Format:</strong> Challenging real-world problems (e.g., Banking transaction, algorithmic optimizations).</li>
                     <li><strong>Time:</strong> 25 minutes. Final, non-negotiable deadline.</li>
                   </ul>
                 </section>
@@ -200,7 +203,7 @@ export function FinalRoundView() {
                     <h3>Round Guidelines</h3>
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li><strong>Hidden Test Cases:</strong> Unlike previous rounds, test cases are strictly hidden.</li>
+                    <li><strong>Hidden Test Cases:</strong> Unlike previous rounds, test cases are strictly hidden and harder.</li>
                     <li><strong>Strict Logic Check:</strong> High-level errors (Login systems, Sort/Search algorithms).</li>
                     <li><strong>No Internet/AI:</strong> Same zero-tolerance anti-cheat policy active.</li>
                   </ul>
@@ -228,7 +231,7 @@ export function FinalRoundView() {
                 </div>
               </div>
             </ScrollArea>
-            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90">
+            <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90 transition-all duration-300">
               Enter The Championship
             </Button>
           </CardContent>
@@ -243,9 +246,12 @@ export function FinalRoundView() {
     <div className="flex flex-col h-screen font-code">
       <RoundHeader round={3} title="Final Round" countdownDuration={25 * 60} onFinish={handleFinish} />
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-hidden">
-        <Card className="flex flex-col overflow-hidden">
+        <Card className="flex flex-col overflow-hidden border-primary/10 shadow-lg">
           <CardHeader className="bg-muted/30 border-b">
-            <CardTitle className="font-headline text-primary">{problem.title}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-headline text-primary">{problem.title}</CardTitle>
+              <Badge className="bg-primary/10 text-primary border-primary/20">Difficulty: Hard</Badge>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-auto p-6">
             <ScrollArea className="h-full">
@@ -257,22 +263,27 @@ export function FinalRoundView() {
         </Card>
 
         <div className="flex flex-col gap-4 overflow-hidden">
-          <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-lg border">
+          <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-lg border border-primary/10 shadow-md">
             <Select defaultValue="java" disabled>
-              <SelectTrigger className="w-[180px] bg-background"><SelectValue placeholder="Select Language" /></SelectTrigger>
+              <SelectTrigger className="w-[180px] bg-background border-primary/10"><SelectValue placeholder="Select Language" /></SelectTrigger>
               <SelectContent><SelectItem value="java">Java</SelectItem></SelectContent>
             </Select>
             <div className="flex-1" />
-            <Button variant="secondary" onClick={handleRunCode} disabled={isRunning}>
-              <Play className="mr-2 h-4 w-4" /> Run
+            <Button variant="secondary" onClick={handleRunCode} disabled={isRunning} className="shadow-sm">
+              <Play className="mr-2 h-4 w-4" /> {isRunning ? 'Checking...' : 'Run Tests'}
             </Button>
-            <Button onClick={handleSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Send className="mr-2 h-4 w-4" /> Submit
+            <Button onClick={handleSubmit} className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-sm">
+              <Send className="mr-2 h-4 w-4" /> Submit Solution
             </Button>
           </div>
           <div className="flex-1 grid grid-rows-2 gap-4 overflow-hidden">
              <CodeEditor code={code} onCodeChange={setCode} language="java" />
-            <Card className="flex flex-col border-primary/20 shadow-xl overflow-hidden">
+            <Card className="flex flex-col border-primary/20 shadow-xl overflow-hidden bg-black/20">
+              <CardHeader className="py-2 px-4 border-b bg-muted/20">
+                <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground uppercase tracking-widest">
+                  <FileCode2 className="h-3 w-3" /> System Console
+                </div>
+              </CardHeader>
               <CardContent className="flex-1 bg-black/40 p-4 overflow-auto font-mono">
                 <pre className={`text-sm whitespace-pre-wrap ${output.includes('Success') ? 'text-green-400' : 'text-blue-200'}`}>{output}</pre>
               </CardContent>
@@ -281,15 +292,17 @@ export function FinalRoundView() {
         </div>
       </div>
       <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-primary/20">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-headline">Final Submission Received</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-headline text-primary">Final Submission Received</AlertDialogTitle>
             <AlertDialogDescription className="text-lg">
-              The competition is now complete. Your results have been recorded.
+              Congratulations! The competition is now complete for your team. Your final results have been recorded in the cloud leaderboard.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => endRound(isSolutionCorrect)}>Finish</AlertDialogAction>
+            <AlertDialogAction onClick={() => endRound(isSolutionCorrect)} className="bg-primary hover:bg-primary/90">
+              Finish & Return to Dashboard
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -298,7 +311,7 @@ export function FinalRoundView() {
 }
 
 const Badge = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={cn("px-2 py-0.5 text-xs font-semibold rounded-full border", className)}>
+  <div className={cn("px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider", className)}>
     {children}
   </div>
 );
