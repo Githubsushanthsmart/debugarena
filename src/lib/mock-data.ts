@@ -344,9 +344,8 @@ export const mockMcqSetD: MCQ[] = [
   { id: 'mcq-d-20', question: 'A perfect binary tree with 63 nodes has height:', options: ['5', '6', '7', '8'], correctAnswerIndex: 1 },
 ];
 
-
 export const mockDebuggingProblems: DebuggingProblem[] = [
-  // New Python Problems
+  // Python Problems
   {
     id: 'dbg-py-1',
     title: 'Student Grade Calculator',
@@ -394,7 +393,7 @@ print(calc.average())`,
     id: 'dbg-py-2',
     title: 'File Reader with Processing',
     language: 'python',
-    description: 'The code fails because it tries to open a non-existent file. Update it to use embedded data.',
+    description: 'Update the code to use embedded data instead of opening a missing file.',
     buggyCode: `def process_scores(filename):
     scores = []
     with open(filename, 'r') as f:
@@ -418,7 +417,7 @@ print(f"Average: {sum([85,92,78,95,88])/5:.1f}")`,
     id: 'dbg-py-3',
     title: 'Data Pipeline Processor',
     language: 'python',
-    description: 'Fix the IndexError caused by accessing the next item incorrectly in the batch loop.',
+    description: 'Fix the IndexError caused by accessing the next item incorrectly.',
     buggyCode: `def process_pipeline(data_batches):
     results = []
     for batch in data_batches:
@@ -449,15 +448,15 @@ print(process_pipeline(batches))`,
     id: 'dbg-py-4',
     title: 'Shopping Cart Total',
     language: 'python',
-    description: 'Fix the bug where mutable default arguments cause different carts to share items.',
+    description: 'Fix the mutable default argument bug in the cart initialization.',
     buggyCode: `def add_item(cart=[], name="", price=0):
     cart.append({'name': name, 'price': price})
     total = sum(item['price'] for item in cart)
     print(f"Added {name}, Total: \${total:.2f}")
     return cart
 
-cart1 = add_item(cart1, "Laptop", 999.99)
-cart2 = add_item(cart2, "Mouse", 25.99)`,
+cart1 = add_item(None, "Laptop", 999.99)
+cart2 = add_item(None, "Mouse", 25.99)`,
     solutionCode: `def add_item(cart=None, name="", price=0):
     if cart is None:
         cart = []
@@ -474,7 +473,7 @@ cart2 = add_item(None, "Mouse", 25.99)`,
     id: 'dbg-py-5',
     title: 'File Word Counter',
     language: 'python',
-    description: 'Fix the logic error where characters are counted instead of words, and handle the input correctly.',
+    description: 'Fix the logic to count words instead of characters and handle input correctly.',
     buggyCode: `def count_words(filename):
     word_count = 0
     with open(filename, 'r') as f:
@@ -499,7 +498,7 @@ print(f"Words in file: {count_words(sample_text)}")`,
     id: 'dbg-py-6',
     title: 'URL Parser',
     language: 'python',
-    description: 'Fix the split logic and index errors when parsing URLs with or without protocols.',
+    description: 'Fix the URL splitting logic to handle missing protocols.',
     buggyCode: `def parse_url(url):
     parts = url.split('/')
     protocol = parts[0]
@@ -526,7 +525,7 @@ print(parse_url(test_url))`,
     id: 'dbg-py-7',
     title: 'Battery Monitor',
     language: 'python',
-    description: 'Fix the DivisionByZero error and incorrect logic in battery status calculation.',
+    description: 'Fix the division by zero and incorrect status logic.',
     buggyCode: `def battery_status(charge_history):
     current = charge_history[-1]
     previous = charge_history[-2]
@@ -560,259 +559,264 @@ history = [85, 82, 80, 78]
 print(battery_status(history))`,
     buggyOutput: 'ZeroDivisionError: division by zero'
   },
-  // Java
+  // Java Problems
   {
     id: 'dbg-java-1',
-    title: 'Find the Bug: Bubble Sort',
+    title: 'Division by Zero',
     language: 'java',
-    description: 'The following Java method for Bubble Sort has a bug that causes an ArrayIndexOutOfBoundsException. Find and fix it.',
-    buggyCode: `public static void bubbleSort(int arr[]) {
-    for(int i=0; i<arr.length; i++){
-        for(int j=0; j<arr.length-i; j++){
-            if(arr[j] > arr[j+1]){
-                int temp = arr[j];
-                arr[j] = arr[j+1];
-                arr[j+1] = temp;
-            }
-        }
+    description: 'Fix the ArithmeticException caused by dividing by zero.',
+    buggyCode: `public class Test {
+    public static void main(String[] args) {
+        int x = 10;
+        int y = 0;
+        System.out.println("Before");
+        int z = x / y;
+        System.out.println(z);
     }
 }`,
-    solutionCode: `public static void bubbleSort(int arr[]) {
-    for(int i=0; i<arr.length-1; i++){
-        for(int j=0; j<arr.length-i-1; j++){
-            if(arr[j] > arr[j+1]){
-                int temp = arr[j];
-                arr[j] = arr[j+1];
-                arr[j+1] = temp;
-            }
-        }
+    solutionCode: `public class Test {
+    public static void main(String[] args) {
+        int x = 10;
+        int y = 2;
+        System.out.println("Before");
+        int z = x / y;
+        System.out.println(z);
     }
 }`,
-    buggyOutput: 'Error: java.lang.ArrayIndexOutOfBoundsException. Check the inner loop boundaries.'
+    buggyOutput: 'Before\nException in thread "main" java.lang.ArithmeticException: / by zero'
   },
   {
     id: 'dbg-java-2',
-    title: 'Find the Bug: Selection Sort',
+    title: 'Array Bounds Error',
     language: 'java',
-    description: 'This Selection Sort implementation has a bug in how it tracks and uses the minimum element. Find and fix it.',
-    buggyCode: `public static void selectionSort(int arr[]){
-    for(int i=0; i<arr.length; i++){
-        int min = arr[i];
-        for(int j=i+1; j<arr.length; j++){
-            if(arr[j] < min){
-                min = j;
-            }
+    description: 'Fix the ArrayIndexOutOfBoundsException in the loop condition.',
+    buggyCode: `public class Test {
+    public static void main(String[] args) {
+        int[] arr = {1, 2, 3};
+        for (int i = 0; i <= 3; i++) {
+            System.out.print(arr[i]);
         }
-        int temp = arr[i];
-        arr[i] = arr[min];
-        arr[min] = temp;
     }
 }`,
-    solutionCode: `public static void selectionSort(int arr[]){
-    for(int i=0; i<arr.length-1; i++){
-        int min_idx = i;
-        for(int j=i+1; j<arr.length; j++){
-            if(arr[j] < arr[min_idx]){
-                min_idx = j;
-            }
+    solutionCode: `public class Test {
+    public static void main(String[] args) {
+        int[] arr = {1, 2, 3};
+        for (int i = 0; i < 3; i++) {
+            System.out.print(arr[i]);
         }
-        int temp = arr[min_idx];
-        arr[min_idx] = arr[i];
-        arr[i] = temp;
     }
 }`,
-    buggyOutput: 'Error: java.lang.ArrayIndexOutOfBoundsException. The "min" variable stores a value, but is used as an index.'
+    buggyOutput: '123Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3'
   },
   {
     id: 'dbg-java-3',
-    title: 'Find the Bug: Insertion Sort',
+    title: 'Missing Return Statement',
     language: 'java',
-    description: 'This Insertion Sort method has a bug in its inner while loop that causes it to not sort correctly. Find and fix it.',
-    buggyCode: `public static void insertionSort(int arr[]){
-    for(int i=1; i<arr.length; i++){
-        int key = arr[i];
-        int j = i-1;
-        while(j>=0 && arr[j] > key){
-            arr[j+1] = arr[j];
-            j++;
-        }
-        arr[j+1] = key;
+    description: 'Ensure the max method always returns a value.',
+    buggyCode: `public class Test {
+    static int max(int a, int b) {
+        if (a > b) return a;
+    }
+    public static void main(String[] args) {
+        System.out.println(max(10, 20));
     }
 }`,
-    solutionCode: `public static void insertionSort(int arr[]){
-    for(int i=1; i<arr.length; i++){
-        int key = arr[i];
-        int j = i-1;
-        while(j>=0 && arr[j] > key){
-            arr[j+1] = arr[j];
-            j--;
-        }
-        arr[j+1] = key;
+    solutionCode: `public class Test {
+    static int max(int a, int b) {
+        if (a > b) return a;
+        return b;
+    }
+    public static void main(String[] args) {
+        System.out.println(max(10, 20));
     }
 }`,
-    buggyOutput: 'Error: Infinite loop detected. The "j" variable is incremented instead of decremented in the while loop.'
+    buggyOutput: 'Error: Compilation failed. Missing return statement.'
   },
   {
     id: 'dbg-java-4',
-    title: 'Find the Bug: Merge Sort Merge Function',
+    title: 'Wrong Loop Variable Scope',
     language: 'java',
-    description: 'The merge helper function for Merge Sort is incomplete. It initializes temporary arrays but never populates them with data. Fix the function.',
-    buggyCode: `void merge(int arr[], int l, int m, int r){
-    int n1 = m-l+1;
-    int n2 = r-m;
-    int L[] = new int[n1];
-    int R[] = new int[n2];
-    int i=0,j=0,k=l;
-    while(i<n1 && j<n2){
-        if(L[i]<=R[j]){
-            arr[k++] = L[i++];
-        } else {
-            arr[k++] = R[j++];
+    description: 'Fix the scope issue of variable i to print correctly after the loop.',
+    buggyCode: `public class Test {
+    public static void main(String[] args) {
+        for(int i = 0; i < 3; i++) {
+            System.out.print(i);
         }
+        System.out.println(i);
     }
 }`,
-    solutionCode: `void merge(int arr[], int l, int m, int r){
-    int n1 = m - l + 1;
-    int n2 = r - m;
-    int L[] = new int[n1];
-    int R[] = new int[n2];
-    for (int i = 0; i < n1; ++i)
-        L[i] = arr[l + i];
-    for (int j = 0; j < n2; ++j)
-        R[j] = arr[m + 1 + j];
-    int i = 0, j = 0;
-    int k = l;
-    while (i < n1 && j < n2) {
-        if (L[i] <= R[j]) {
-            arr[k] = L[i];
-            i++;
+    solutionCode: `public class Test {
+    public static void main(String[] args) {
+        int i;
+        for(i = 0; i < 3; i++) {
+            System.out.print(i);
         }
-        else {
-            arr[k] = R[j];
-            j++;
-        }
-        k++;
-    }
-    int kRemaining = k;
-    while (i < n1) {
-        arr[kRemaining] = L[i];
-        i++;
-        kRemaining++;
-    }
-    while (j < n2) {
-        arr[kRemaining] = R[j];
-        j++;
-        kRemaining++;
+        System.out.println(i);
     }
 }`,
-    buggyOutput: 'Incorrect Output. The temporary arrays L and R are not populated with data from the main array before merging.'
+    buggyOutput: 'Error: Compilation failed. Cannot find symbol: variable i.'
   },
   {
     id: 'dbg-java-5',
-    title: 'Find the Bug: Quick Sort Partition',
+    title: 'Try-Catch Without Exception Handling',
     language: 'java',
-    description: 'The partition logic for Quick Sort is incorrect, leading to a wrong sort. Fix the partitioning method.',
-    buggyCode: `int partition(int arr[], int low, int high){
-    int pivot = arr[high];
-    int i = low;
-    for(int j=low; j<=high; j++){
-        if(arr[j] < pivot){
-            i++;
-            int temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
+    description: 'Properly catch the ArithmeticException with a parameter.',
+    buggyCode: `public class Test {
+    public static void main(String[] args) {
+        try {
+            int x = 10 / 0;
+        } catch {
+            System.out.println("Error");
         }
     }
-    return i;
 }`,
-    solutionCode: `int partition(int arr[], int low, int high){
-    int pivot = arr[high];
-    int i = (low - 1);
-    for(int j=low; j<high; j++){
-        if(arr[j] < pivot){
-            i++;
-            int temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
+    solutionCode: `public class Test {
+    public static void main(String[] args) {
+        try {
+            int x = 10 / 0;
+        } catch (ArithmeticException e) {
+            System.out.println("Error");
         }
     }
-    int temp = arr[i+1];
-    arr[i+1] = arr[high];
-    arr[high] = temp;
-    return (i+1);
 }`,
-    buggyOutput: 'Incorrect Output. The partition logic is flawed, leading to an improperly sorted array.'
+    buggyOutput: 'Error: Compilation failed. Catch block must have a parameter.'
   },
   {
     id: 'dbg-java-6',
-    title: 'Find the Bug: Heap Sort Heapify',
+    title: 'Wrong Array Declaration',
     language: 'java',
-    description: 'The heapify function for Heap Sort uses incorrect indexing for children and is missing a recursive call. Find and fix the bugs.',
-    buggyCode: `void heapify(int arr[], int n, int i){
-    int largest = i;
-    int l = 2*i;
-    int r = 2*i+1;
-    if(l<n && arr[l]>arr[largest]) largest=l;
-    if(r<n && arr[r]>arr[largest]) largest=r;
-    if(largest!=i){
-        int temp=arr[i];
-        arr[i]=arr[largest];
-        arr[largest]=temp;
+    description: 'Fix the incorrect array initialization syntax.',
+    buggyCode: `public class Test {
+    public static void main(String[] args) {
+        int arr[] = new int[3]{1, 2, 3};
+        System.out.println(arr[0]);
     }
 }`,
-    solutionCode: `void heapify(int arr[], int n, int i){
-    int largest = i;
-    int l = 2*i + 1;
-    int r = 2*i + 2;
-    if(l<n && arr[l]>arr[largest]) largest=l;
-    if(r<n && arr[r]>arr[largest]) largest=r;
-    if(largest!=i){
-        int temp=arr[i];
-        arr[i]=arr[largest];
-        arr[largest]=temp;
-        heapify(arr, n, largest);
+    solutionCode: `public class Test {
+    public static void main(String[] args) {
+        int[] arr = {1, 2, 3};
+        System.out.println(arr[0]);
     }
 }`,
-    buggyOutput: 'Incorrect Output. The heapify function is missing the recursive call to heapify the affected subtree.'
+    buggyOutput: 'Error: Compilation failed. Illegal array initialization.'
   },
-    {
+  {
     id: 'dbg-java-7',
-    title: 'Find the Bug: Counting Sort',
+    title: 'Break Outside Loop',
     language: 'java',
-    description: 'This Counting Sort implementation is buggy and incomplete. It fails to find the correct maximum value and doesn\'t construct the sorted output. Fix the logic.',
-    buggyCode: `int[] countSort(int arr[]){
-    int max = arr[0];
-    for(int i=0;i<arr.length;i++)
-        if(arr[i]>max) max=i;
-
-    int count[] = new int[max];
-    for(int i=0;i<arr.length;i++)
-        count[arr[i]]++;
-    return count;
+    description: 'Remove the invalid break statement from outside the loop.',
+    buggyCode: `public class Test {
+    public static void main(String[] args) {
+        for (int i = 0; i < 5; i++) {
+            if (i == 3) break;
+            System.out.print(i);
+        }
+        break;
+    }
 }`,
-    solutionCode: `int[] countSort(int arr[]){
-    if (arr.length == 0) return new int[0];
-    int max = arr[0];
-    for(int i=1; i<arr.length; i++)
-        if(arr[i]>max) max=arr[i];
-
-    int count[] = new int[max + 1];
-    for(int i=0; i<arr.length; i++)
-        count[arr[i]]++;
-    
-    int sortedIndex = 0;
-    for(int i = 0; i < count.length; i++) {
-        while(count[i] > 0) {
-            arr[sortedIndex++] = i;
-            count[i]--;
+    solutionCode: `public class Test {
+    public static void main(String[] args) {
+        for (int i = 0; i < 5; i++) {
+            if (i == 3) break;
+            System.out.print(i);
         }
     }
-    return arr;
 }`,
-    buggyOutput: 'Error: java.lang.ArrayIndexOutOfBoundsException. The maximum value in the array is not calculated correctly, leading to an incorrectly sized count array.'
+    buggyOutput: 'Error: Compilation failed. Break statement outside of loop.'
+  },
+  {
+    id: 'dbg-java-8',
+    title: 'Library Management System',
+    language: 'java',
+    description: 'Fix multiple bugs including ArrayIndexOutOfBounds, NullPointer, and infinite loop.',
+    buggyCode: `import java.util.Scanner;
+import java.util.ArrayList;
+
+class Book {
+    String title;
+    boolean available;
+    Book(String t) { title = t; available = true; }
+    void display() { System.out.println(title + " - " + (available ? "Available" : "Issued")); }
+}
+
+public class Library {
+    ArrayList<Book> books;
+    Library() {
+        books = new ArrayList<>();
+        books.add(new Book("Java Basics"));
+        books.add(new Book("Data Structures"));
+        books.add(new Book("Algorithms"));
+    }
+    void issueBook(int index) { if (index >= 0 && index < books.size()) books.get(index).available = false; }
+    void returnBook(int index) { if (index >= 0 && index < books.size()) books.get(index).available = true; }
+    void displayAll() {
+        for (int i = 0; i <= books.size(); i++) {
+            books.get(i).display();
+        }
+    }
+    public static void main(String[] args) {
+        Library lib = null;
+        Scanner sc = new Scanner(System.in);
+        int choice;
+        while (true) {
+            System.out.println("1. Display 2. Issue 3. Return 4. Exit");
+            choice = sc.nextInt();
+            switch (choice) {
+                case 1: lib.displayAll(); break;
+                case 2: lib.issueBook(sc.nextInt()); break;
+                case 3: lib.returnBook(sc.nextInt()); break;
+                case 4: 
+                default: System.out.println("Invalid");
+            }
+        }
+    }
+}`,
+    solutionCode: `import java.util.Scanner;
+import java.util.ArrayList;
+
+class Book {
+    String title;
+    boolean available;
+    Book(String t) { title = t; available = true; }
+    void display() { System.out.println(title + " - " + (available ? "Available" : "Issued")); }
+}
+
+public class Library {
+    ArrayList<Book> books;
+    Library() {
+        books = new ArrayList<>();
+        books.add(new Book("Java Basics"));
+        books.add(new Book("Data Structures"));
+        books.add(new Book("Algorithms"));
+    }
+    void issueBook(int index) { if (index >= 0 && index < books.size()) books.get(index).available = false; }
+    void returnBook(int index) { if (index >= 0 && index < books.size()) books.get(index).available = true; }
+    void displayAll() {
+        for (int i = 0; i < books.size(); i++) {
+            books.get(i).display();
+        }
+    }
+    public static void main(String[] args) {
+        Library lib = new Library();
+        Scanner sc = new Scanner(System.in);
+        int choice;
+        while (true) {
+            System.out.println("1. Display 2. Issue 3. Return 4. Exit");
+            choice = sc.nextInt();
+            if (choice == 4) break;
+            switch (choice) {
+                case 1: lib.displayAll(); break;
+                case 2: System.out.print("Book index: "); lib.issueBook(sc.nextInt()); break;
+                case 3: System.out.print("Book index: "); lib.returnBook(sc.nextInt()); break;
+                default: System.out.println("Invalid");
+            }
+        }
+        sc.close();
+    }
+}`,
+    buggyOutput: 'Exception in thread "main" java.lang.NullPointerException at Library.main'
   }
 ];
-
 
 export const mockFinalProblems: FinalProblem[] = [
   {
@@ -971,5 +975,4 @@ The provided implementation of Kadane's algorithm fails for arrays containing on
   }
 ];
 
-// For backward compatibility while migration occurs
 export const mockFinalProblem = mockFinalProblems[0];

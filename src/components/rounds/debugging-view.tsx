@@ -85,44 +85,29 @@ export function DebuggingView() {
   };
 
   const validateCode = (userCode: string, problemId: string): boolean => {
-    // Normalize code by removing whitespace and comments to compare logic
     const normalized = userCode.replace(/\s+/g, '').replace(/#.*$/gm, '').replace(/\/\/.*/g, '');
     
     switch (problemId) {
-      // NEW PYTHON PROBLEMS
-      case 'dbg-py-1': // Student Grade Calculator
-        return !normalized.includes('avg=85.0') && normalized.includes('returnavg');
-      case 'dbg-py-2': // File Reader
-        return !normalized.includes("open(filename,'r')") && (normalized.includes('scores=[85,92,78,95,88]') || normalized.includes('scores=[85,92,78,95,88]'));
-      case 'dbg-py-3': // Data Pipeline
-        return !normalized.includes('batch[i+1]') && (normalized.includes('processed.append(item*2)') || normalized.includes('processed.append(item*2)'));
-      case 'dbg-py-4': // Shopping Cart
-        return normalized.includes('ifcartisNone:cart=[]') || normalized.includes('ifcartisNone:cart=[]');
-      case 'dbg-py-5': // Word Counter
-        return normalized.includes('len(line.split())') || normalized.includes('len(line.split())');
-      case 'dbg-py-6': // URL Parser
-        return normalized.includes('protocol,rest=url.split') || normalized.includes('split(\'://\',1)');
-      case 'dbg-py-7': // Battery Monitor
-        return !normalized.includes('time.time()-time.time()') && (normalized.includes('rate=(current-previous)/1.0') || normalized.includes('rate=(current-previous)/1'));
+      // PYTHON PROBLEMS
+      case 'dbg-py-1': return !normalized.includes('avg=85.0') && normalized.includes('returnavg');
+      case 'dbg-py-2': return !normalized.includes("open(filename,'r')") && normalized.includes('scores=[85,92,78,95,88]');
+      case 'dbg-py-3': return !normalized.includes('batch[i+1]') && normalized.includes('processed.append(item*2)');
+      case 'dbg-py-4': return normalized.includes('ifcartisNone:cart=[]');
+      case 'dbg-py-5': return normalized.includes('len(line.split())');
+      case 'dbg-py-6': return normalized.includes('protocol,rest=url.split') || normalized.includes('split(\'://\',1)');
+      case 'dbg-py-7': return !normalized.includes('time.time()-time.time()') && normalized.includes('rate=(current-previous)/1.0');
       
-      // JAVA PROBLEMS
-      case 'dbg-java-1': // Bubble Sort
-        return normalized.includes('arr.length-i-1') || normalized.includes('j<arr.length-1-i');
-      case 'dbg-java-2': // Selection Sort
-        return normalized.includes('min_idx=j') && normalized.includes('arr[min_idx]');
-      case 'dbg-java-3': // Insertion Sort
-        return normalized.includes('j--');
-      case 'dbg-java-4': // Merge Sort
-        return normalized.includes('L[i]=arr[l+i]');
-      case 'dbg-java-5': // Quick Sort
-        return normalized.includes('i=(low-1)');
-      case 'dbg-java-6': // Heap Sort
-        return normalized.includes('heapify(arr,n,largest)');
-      case 'dbg-java-7': // Counting Sort
-        return normalized.includes('max+1');
-      default:
-        const solNormalized = mockDebuggingProblems.find(p => p.id === problemId)?.solutionCode.replace(/\s+/g, '') || '';
-        return normalized.includes(solNormalized.substring(0, 20)); // Loose fallback
+      // NEW JAVA PROBLEMS
+      case 'dbg-java-1': return normalized.includes('y=2') || normalized.includes('y!=0');
+      case 'dbg-java-2': return normalized.includes('i<3') || normalized.includes('i<=2');
+      case 'dbg-java-3': return normalized.includes('returnb');
+      case 'dbg-java-4': return normalized.includes('inti;for(i=0');
+      case 'dbg-java-5': return normalized.includes('catch(ArithmeticExceptione)') || normalized.includes('catch(Exceptione)');
+      case 'dbg-java-6': return normalized.includes('int[]arr={1,2,3}') || normalized.includes('newint[]{1,2,3}');
+      case 'dbg-java-7': return !normalized.includes('}break;');
+      case 'dbg-java-8': return normalized.includes('i<books.size()') && normalized.includes('Librarylib=newLibrary()') && normalized.includes('if(choice==4)break');
+      
+      default: return false;
     }
   };
 
@@ -138,7 +123,6 @@ export function DebuggingView() {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
       } else if (isCorrect) {
         let finalOutput = 'Success! All test cases passed.\n\nOutput:\n';
-        // Add specific output based on the problem
         if (problem.id === 'dbg-py-1') finalOutput += '85.0';
         else if (problem.id === 'dbg-py-2') finalOutput += '[True, True, False, True, True]\nAverage: 87.6';
         else if (problem.id === 'dbg-py-3') finalOutput += '[[300], [400, 600]]';
@@ -146,11 +130,19 @@ export function DebuggingView() {
         else if (problem.id === 'dbg-py-5') finalOutput += 'Words in file: 8';
         else if (problem.id === 'dbg-py-6') finalOutput += 'http://example.com/api/users';
         else if (problem.id === 'dbg-py-7') finalOutput += 'discharging';
+        else if (problem.id === 'dbg-java-1') finalOutput += 'Before\n5';
+        else if (problem.id === 'dbg-java-2') finalOutput += '123';
+        else if (problem.id === 'dbg-java-3') finalOutput += '20';
+        else if (problem.id === 'dbg-java-4') finalOutput += '0123';
+        else if (problem.id === 'dbg-java-5') finalOutput += 'Error';
+        else if (problem.id === 'dbg-java-6') finalOutput += '1';
+        else if (problem.id === 'dbg-java-7') finalOutput += '012';
+        else if (problem.id === 'dbg-java-8') finalOutput += '1. Display 2. Issue 3. Return 4. Exit\n1\nJava Basics - Available\nData Structures - Available\nAlgorithms - Available\n1. Display 2. Issue 3. Return 4. Exit\n2\nBook index: 0\n1. Display 2. Issue 3. Return 4. Exit\n1\nJava Basics - Issued\nData Structures - Available\nAlgorithms - Available';
         else finalOutput += 'Program executed successfully.';
         
         setOutput(finalOutput);
       } else {
-        setOutput('Runtime Error: Logical mismatch detected. Your output does not match the expected results for all test cases. Keep debugging!');
+        setOutput('Runtime Error: Logical mismatch detected. Your output does not match the expected results. Keep debugging!');
       }
       setIsRunning(false);
     }, 400);
@@ -222,7 +214,6 @@ export function DebuggingView() {
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                     <li>Each team will be given <strong>15 - 30 minutes</strong> to debug the problems.</li>
                     <li>Submission after the timer ends will not be accepted.</li>
-                    <li>Tests pressure handling and real-time problem-solving ability.</li>
                   </ul>
                 </section>
 
@@ -234,7 +225,6 @@ export function DebuggingView() {
                   <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
                     <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                       <li><strong>Prohibited:</strong> Internet, ChatGPT/AI tools, Stack Overflow, External editors.</li>
-                      <li><strong>Allowed:</strong> Provided Monaco code editor and built-in compiler results.</li>
                     </ul>
                   </div>
                 </section>
@@ -246,8 +236,6 @@ export function DebuggingView() {
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                     <li>Participants must fix only errors, not rewrite the entire program.</li>
-                    <li>Correct syntax, logical, or runtime errors.</li>
-                    <li><strong>Major logic modification</strong> will lead to disqualification or marks deduction.</li>
                   </ul>
                 </section>
 
@@ -257,56 +245,9 @@ export function DebuggingView() {
                     <h3>4. Output Must Match Exactly</h3>
                   </div>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Program output must match the expected output <strong>exactly</strong>.</li>
-                    <li>Case-sensitive and format-sensitive (spacing, punctuation).</li>
-                    <li>Extra print statements may result in marks deduction.</li>
+                    <li>Program output must match the expected output exactly.</li>
                   </ul>
                 </section>
-
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
-                    <Scale className="h-5 w-5 text-primary" />
-                    <h3>5. Marking Criteria</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground border p-4 rounded-lg">
-                    <div>Syntax Error Fix: 30%</div>
-                    <div>Logical Error Fix: 30%</div>
-                    <div>Runtime Error Fix: 20%</div>
-                    <div>Code Cleanliness: 10%</div>
-                    <div>Time of Submission: 10%</div>
-                    <div className="col-span-2 text-accent font-bold">Bonus: First correct submission gets extra points.</div>
-                  </div>
-                </section>
-
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
-                    <Users className="h-5 w-5 text-accent" />
-                    <h3>6. Team Formation Rule</h3>
-                  </div>
-                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Maximum 2–3 members per team.</li>
-                    <li>One laptop per team to prevent crowd coding.</li>
-                  </ul>
-                </section>
-
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 text-xl font-headline text-foreground">
-                    <Trophy className="h-5 w-5 text-yellow-500" />
-                    <h3>7. Tie-Breaker Rule</h3>
-                  </div>
-                  <ol className="list-decimal pl-6 space-y-2 text-muted-foreground">
-                    <li>Earlier submission wins.</li>
-                    <li>Fewer compilation attempts wins.</li>
-                    <li>Bonus surprise debugging question (5 minutes) if still tied.</li>
-                  </ol>
-                </section>
-
-                <div className="flex items-start gap-3 p-4 bg-accent/10 border border-accent/20 rounded-lg">
-                  <ShieldAlert className="h-6 w-6 text-accent shrink-0" />
-                  <p className="text-sm text-muted-foreground italic">
-                    <strong>Extra Professional Rules:</strong> No plagiarism (manual observation active). Phones must be kept aside. Any misconduct leads to immediate disqualification.
-                  </p>
-                </div>
               </div>
             </ScrollArea>
             <Button onClick={() => setRulesAccepted(true)} className="w-full mt-8 text-lg py-7 font-headline font-bold uppercase tracking-wider bg-primary hover:bg-primary/90">
