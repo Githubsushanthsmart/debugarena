@@ -84,25 +84,50 @@ export function DebuggingView() {
     }
   };
 
+  const validateCode = (userCode: string, problemId: string): boolean => {
+    const normalized = userCode.replace(/\s+/g, '');
+    
+    // Problem specific validation logic (less strict than exact string match)
+    switch (problemId) {
+      case 'dbg-py-1': // Binary Search
+        return (normalized.includes('high=len(arr)-1') || normalized.includes('high=len(nums)-1')) && 
+               (normalized.includes('low=mid+1') || normalized.includes('low=mid+1'));
+      case 'dbg-py-2': // Third Max
+        return normalized.includes('set(nums)') && normalized.includes('sorted');
+      case 'dbg-py-4': // Fibonacci
+        return normalized.includes('seq[-1]+seq[-2]');
+      case 'dbg-py-5': // Average
+        return normalized.includes('ifnotnums:return0') || normalized.includes('iflen(nums)==0:return0');
+      case 'dbg-java-1': // Bubble Sort
+        return normalized.includes('arr.length-i-1') || normalized.includes('j<arr.length-1-i');
+      case 'dbg-java-2': // Selection Sort
+        return normalized.includes('min_idx=j') && normalized.includes('arr[min_idx]');
+      case 'dbg-java-3': // Insertion Sort
+        return normalized.includes('j--');
+      default:
+        // Fallback to strict comparison for others
+        const solNormalized = mockDebuggingProblems.find(p => p.id === problemId)?.solutionCode.replace(/\s+/g, '') || '';
+        return normalized === solNormalized;
+    }
+  };
+
   const handleRunCode = () => {
     if (!problem) return;
     setIsRunning(true);
     setOutput('Compiling and running tests...');
 
     setTimeout(() => {
-      const normalizedUserCode = code.replace(/\s+/g, '');
-      const normalizedBuggyCode = problem.buggyCode.replace(/\s+/g, '');
-      const normalizedSolutionCode = problem.solutionCode.replace(/\s+/g, '');
+      const isCorrect = validateCode(code, problem.id);
 
-      if (normalizedUserCode === normalizedBuggyCode) {
+      if (code.replace(/\s+/g, '') === problem.buggyCode.replace(/\s+/g, '')) {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
-      } else if (normalizedUserCode === normalizedSolutionCode) {
+      } else if (isCorrect) {
         setOutput('Success! All test cases passed.\n\nOutput:\nProgram executed successfully.');
       } else {
-        setOutput('Runtime Error: Logical mismatch detected. Keep debugging!');
+        setOutput('Runtime Error: Logical mismatch detected. Your output does not match the expected results for all test cases. Keep debugging!');
       }
       setIsRunning(false);
-    }, 150);
+    }, 400);
   };
 
   const endRound = useCallback(
@@ -129,14 +154,14 @@ export function DebuggingView() {
 
   const handleSubmit = () => {
     if (!problem) return;
-    const isCorrect = code.replace(/\s+/g, '') === problem.solutionCode.replace(/\s+/g, '');
+    const isCorrect = validateCode(code, problem.id);
     setIsSolutionCorrect(isCorrect);
     setShowResultDialog(true);
   };
 
   const handleFinish = useCallback(() => {
-    endRound(false);
-  }, [endRound]);
+    handleSubmit();
+  }, [handleSubmit]);
 
   const handleWarning = useCallback(
     (warningCount: number) => {
