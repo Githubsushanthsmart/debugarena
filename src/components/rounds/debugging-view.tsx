@@ -85,23 +85,27 @@ export function DebuggingView() {
   };
 
   const validateCode = (userCode: string, problemId: string): boolean => {
-    const normalized = userCode.replace(/\s+/g, '');
+    // Normalize code by removing whitespace and comments to compare logic
+    const normalized = userCode.replace(/\s+/g, '').replace(/#.*$/gm, '').replace(/\/\/.*/g, '');
     
     switch (problemId) {
-      case 'dbg-py-1': // Grade Calculator
+      // NEW PYTHON PROBLEMS
+      case 'dbg-py-1': // Student Grade Calculator
         return !normalized.includes('avg=85.0') && normalized.includes('returnavg');
       case 'dbg-py-2': // File Reader
-        return !normalized.includes("open(filename,'r')") && normalized.includes('scores=[85,92,78,95,88]');
+        return !normalized.includes("open(filename,'r')") && (normalized.includes('scores=[85,92,78,95,88]') || normalized.includes('scores=[85,92,78,95,88]'));
       case 'dbg-py-3': // Data Pipeline
-        return normalized.includes('processed.append(item*2)');
+        return !normalized.includes('batch[i+1]') && (normalized.includes('processed.append(item*2)') || normalized.includes('processed.append(item*2)'));
       case 'dbg-py-4': // Shopping Cart
-        return normalized.includes('ifcartisNone:cart=[]');
+        return normalized.includes('ifcartisNone:cart=[]') || normalized.includes('ifcartisNone:cart=[]');
       case 'dbg-py-5': // Word Counter
-        return normalized.includes('len(line.split())');
+        return normalized.includes('len(line.split())') || normalized.includes('len(line.split())');
       case 'dbg-py-6': // URL Parser
-        return normalized.includes("protocol,rest=url.split('://',1)") || normalized.includes("url.split('/')"); // More flexible
+        return normalized.includes('protocol,rest=url.split') || normalized.includes('split(\'://\',1)');
       case 'dbg-py-7': // Battery Monitor
-        return !normalized.includes('time.time()-time.time()') && normalized.includes('rate=(current-previous)/1.0');
+        return !normalized.includes('time.time()-time.time()') && (normalized.includes('rate=(current-previous)/1.0') || normalized.includes('rate=(current-previous)/1'));
+      
+      // JAVA PROBLEMS
       case 'dbg-java-1': // Bubble Sort
         return normalized.includes('arr.length-i-1') || normalized.includes('j<arr.length-1-i');
       case 'dbg-java-2': // Selection Sort
@@ -118,7 +122,7 @@ export function DebuggingView() {
         return normalized.includes('max+1');
       default:
         const solNormalized = mockDebuggingProblems.find(p => p.id === problemId)?.solutionCode.replace(/\s+/g, '') || '';
-        return normalized === solNormalized;
+        return normalized.includes(solNormalized.substring(0, 20)); // Loose fallback
     }
   };
 
@@ -134,7 +138,7 @@ export function DebuggingView() {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
       } else if (isCorrect) {
         let finalOutput = 'Success! All test cases passed.\n\nOutput:\n';
-        // Add specific output for the new python problems
+        // Add specific output based on the problem
         if (problem.id === 'dbg-py-1') finalOutput += '85.0';
         else if (problem.id === 'dbg-py-2') finalOutput += '[True, True, False, True, True]\nAverage: 87.6';
         else if (problem.id === 'dbg-py-3') finalOutput += '[[300], [400, 600]]';
