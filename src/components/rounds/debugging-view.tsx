@@ -87,25 +87,36 @@ export function DebuggingView() {
   const validateCode = (userCode: string, problemId: string): boolean => {
     const normalized = userCode.replace(/\s+/g, '');
     
-    // Problem specific validation logic (less strict than exact string match)
     switch (problemId) {
-      case 'dbg-py-1': // Binary Search
-        return (normalized.includes('high=len(arr)-1') || normalized.includes('high=len(nums)-1')) && 
-               (normalized.includes('low=mid+1') || normalized.includes('low=mid+1'));
-      case 'dbg-py-2': // Third Max
-        return normalized.includes('set(nums)') && normalized.includes('sorted');
-      case 'dbg-py-4': // Fibonacci
-        return normalized.includes('seq[-1]+seq[-2]');
-      case 'dbg-py-5': // Average
-        return normalized.includes('ifnotnums:return0') || normalized.includes('iflen(nums)==0:return0');
+      case 'dbg-py-1': // Grade Calculator
+        return !normalized.includes('avg=85.0') && normalized.includes('returnavg');
+      case 'dbg-py-2': // File Reader
+        return !normalized.includes("open(filename,'r')") && normalized.includes('scores=[85,92,78,95,88]');
+      case 'dbg-py-3': // Data Pipeline
+        return normalized.includes('processed.append(item*2)');
+      case 'dbg-py-4': // Shopping Cart
+        return normalized.includes('ifcartisNone:cart=[]');
+      case 'dbg-py-5': // Word Counter
+        return normalized.includes('len(line.split())');
+      case 'dbg-py-6': // URL Parser
+        return normalized.includes("protocol,rest=url.split('://',1)") || normalized.includes("url.split('/')"); // More flexible
+      case 'dbg-py-7': // Battery Monitor
+        return !normalized.includes('time.time()-time.time()') && normalized.includes('rate=(current-previous)/1.0');
       case 'dbg-java-1': // Bubble Sort
         return normalized.includes('arr.length-i-1') || normalized.includes('j<arr.length-1-i');
       case 'dbg-java-2': // Selection Sort
         return normalized.includes('min_idx=j') && normalized.includes('arr[min_idx]');
       case 'dbg-java-3': // Insertion Sort
         return normalized.includes('j--');
+      case 'dbg-java-4': // Merge Sort
+        return normalized.includes('L[i]=arr[l+i]');
+      case 'dbg-java-5': // Quick Sort
+        return normalized.includes('i=(low-1)');
+      case 'dbg-java-6': // Heap Sort
+        return normalized.includes('heapify(arr,n,largest)');
+      case 'dbg-java-7': // Counting Sort
+        return normalized.includes('max+1');
       default:
-        // Fallback to strict comparison for others
         const solNormalized = mockDebuggingProblems.find(p => p.id === problemId)?.solutionCode.replace(/\s+/g, '') || '';
         return normalized === solNormalized;
     }
@@ -122,7 +133,18 @@ export function DebuggingView() {
       if (code.replace(/\s+/g, '') === problem.buggyCode.replace(/\s+/g, '')) {
         setOutput(problem.buggyOutput || 'Error: Output does not match the expected result.');
       } else if (isCorrect) {
-        setOutput('Success! All test cases passed.\n\nOutput:\nProgram executed successfully.');
+        let finalOutput = 'Success! All test cases passed.\n\nOutput:\n';
+        // Add specific output for the new python problems
+        if (problem.id === 'dbg-py-1') finalOutput += '85.0';
+        else if (problem.id === 'dbg-py-2') finalOutput += '[True, True, False, True, True]\nAverage: 87.6';
+        else if (problem.id === 'dbg-py-3') finalOutput += '[[300], [400, 600]]';
+        else if (problem.id === 'dbg-py-4') finalOutput += 'Added Laptop, Total: $999.99\nAdded Mouse, Total: $25.99';
+        else if (problem.id === 'dbg-py-5') finalOutput += 'Words in file: 8';
+        else if (problem.id === 'dbg-py-6') finalOutput += 'http://example.com/api/users';
+        else if (problem.id === 'dbg-py-7') finalOutput += 'discharging';
+        else finalOutput += 'Program executed successfully.';
+        
+        setOutput(finalOutput);
       } else {
         setOutput('Runtime Error: Logical mismatch detected. Your output does not match the expected results for all test cases. Keep debugging!');
       }

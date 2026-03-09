@@ -346,155 +346,219 @@ export const mockMcqSetD: MCQ[] = [
 
 
 export const mockDebuggingProblems: DebuggingProblem[] = [
-  // Python
+  // New Python Problems
   {
     id: 'dbg-py-1',
-    title: 'Find the Bug: Binary Search',
+    title: 'Student Grade Calculator',
     language: 'python',
-    description: 'The following Python function is supposed to perform a binary search on a sorted array. However, it contains bugs that prevent it from working correctly. Find and fix the bugs.',
-    buggyCode: `def binary_search(arr, x):
-    low = 0
-    high = len(arr)
-    while low <= high:
-        mid = (low + high) // 2
-        if arr[mid] == x:
-            return mid
-        elif arr[mid] < x:
-            low = mid
-        else:
-            high = mid - 1
-    return -1`,
-    solutionCode: `def binary_search(arr, x):
-    low = 0
-    high = len(arr) - 1
-    while low <= high:
-        mid = (low + high) // 2
-        if arr[mid] < x:
-            low = mid + 1
-        elif arr[mid] > x:
-            high = mid - 1
-        else:
-            return mid
-    return -1`,
-    buggyOutput: 'Error: IndexError: list index out of range. The loop condition or array access is incorrect.'
+    description: 'Fix the scope and return issue in the average calculation.',
+    buggyCode: `class GradeCalculator:
+    def __init__(self):
+        self.grades = []
+    
+    def add_grade(self, grade):
+        self.grades.append(grade)
+    
+    def average(self):
+        total = sum(self.grades)
+        count = len(self.grades)
+        avg = total / count
+        print(avg)
+        avg = 85.0  # Shadowing
+        return avg
+
+calc = GradeCalculator()
+calc.add_grade(90)
+calc.add_grade(80)
+print(calc.average())`,
+    solutionCode: `class GradeCalculator:
+    def __init__(self):
+        self.grades = []
+    
+    def add_grade(self, grade):
+        self.grades.append(grade)
+    
+    def average(self):
+        total = sum(self.grades)
+        count = len(self.grades)
+        avg = total / count
+        return avg
+
+calc = GradeCalculator()
+calc.add_grade(90)
+calc.add_grade(80)
+print(calc.average())`,
+    buggyOutput: '85.0\n85.0'
   },
   {
     id: 'dbg-py-2',
-    title: 'Find the Bug: Third Maximum Element',
+    title: 'File Reader with Processing',
     language: 'python',
-    description: 'This function should find the third distinct maximum number in a list. If the third maximum does not exist, it should return the maximum number. It has bugs in handling duplicate values.',
-    buggyCode: `def third_max(nums):
-    first = second = third = float('-inf')
-    for n in nums:
-        if n > first:
-            third = second
-            second = first
-            first = n
-        elif n > second:
-            third = second
-            second = n
-        elif n > third:
-            third = n
-    return third`,
-    solutionCode: `def third_max(nums):
-    nums = sorted(list(set(nums)), reverse=True)
-    if len(nums) < 3:
-        return nums[0]
-    else:
-        return nums[2]`,
-    buggyOutput: 'Incorrect output. The logic does not handle duplicate numbers correctly, leading to a wrong third maximum.'
+    description: 'The code fails because it tries to open a non-existent file. Update it to use embedded data.',
+    buggyCode: `def process_scores(filename):
+    scores = []
+    with open(filename, 'r') as f:
+        for line in f:
+            score = float(line.strip())
+            scores.append(score)
+    avg = sum(scores) / len(scores)
+    return [s > avg for s in scores]
+
+print(process_scores('nonexistent.txt'))`,
+    solutionCode: `def process_scores(filename):
+    scores = [85, 92, 78, 95, 88]
+    avg = sum(scores) / len(scores)
+    return [s > avg for s in scores]
+
+print(process_scores('demo'))
+print(f"Average: {sum([85,92,78,95,88])/5:.1f}")`,
+    buggyOutput: 'FileNotFoundError: [Errno 2] No such file or directory: \'nonexistent.txt\''
   },
   {
     id: 'dbg-py-3',
-    title: 'Find the Bug: Validate Binary Search Tree',
+    title: 'Data Pipeline Processor',
     language: 'python',
-    description: 'This function checks if a binary tree is a valid Binary Search Tree (BST). There is a logical error in the recursion. Note: TreeNode class definition is assumed to exist.',
-    buggyCode: `def isValidBST(root):
-    def helper(node, low, high):
-        if node is None:
-            return True
-        if node.val <= low or node.val >= high:
-            return False
-        return helper(node.left, low, node.val) or helper(node.right, node.val, high)
-    return helper(root, float('-inf'), float('inf'))`,
-    solutionCode: `def isValidBST(root):
-    def helper(node, low, high):
-        if node is None:
-            return True
-        if node.val <= low or node.val >= high:
-            return False
-        return helper(node.left, low, node.val) and helper(node.right, node.val, high)
-    return helper(root, float('-inf'), float('inf'))`,
-    buggyOutput: 'Incorrect output. The recursive check uses "or" instead of "and", allowing invalid BSTs to pass.'
+    description: 'Fix the IndexError caused by accessing the next item incorrectly in the batch loop.',
+    buggyCode: `def process_pipeline(data_batches):
+    results = []
+    for batch in data_batches:
+        processed = []
+        for i, item in enumerate(batch):
+            if item > 100:
+                processed.append(batch[i+1] * 2)
+        results.append(processed)
+    return results
+
+batches = [[50, 150, 75], [200, 300]]
+print(process_pipeline(batches))`,
+    solutionCode: `def process_pipeline(data_batches):
+    results = []
+    for batch in data_batches:
+        processed = []
+        for i, item in enumerate(batch):
+            if item > 100:
+                processed.append(item * 2)
+        results.append(processed)
+    return results
+
+batches = [[50, 150, 75], [200, 300]]
+print(process_pipeline(batches))`,
+    buggyOutput: 'IndexError: list index out of range'
   },
   {
     id: 'dbg-py-4',
-    title: 'Find the Bug: Fibonacci Sequence',
+    title: 'Shopping Cart Total',
     language: 'python',
-    description: 'This function generates the first n numbers of the Fibonacci sequence. It contains a logical error in how the next number is calculated.',
-    buggyCode: `def fibonacci(n):
-    if n <= 0: return []
-    if n == 1: return [0]
-    seq = [0, 1]
-    while len(seq) < n:
-        seq.append(seq[-1] + seq[1]) # Error here
-    return seq`,
-    solutionCode: `def fibonacci(n):
-    if n <= 0: return []
-    if n == 1: return [0]
-    seq = [0, 1]
-    while len(seq) < n:
-        seq.append(seq[-1] + seq[-2])
-    return seq`,
-    buggyOutput: 'Incorrect output. The sequence generated does not follow the Fibonacci rule (sum of two previous numbers).'
+    description: 'Fix the bug where mutable default arguments cause different carts to share items.',
+    buggyCode: `def add_item(cart=[], name="", price=0):
+    cart.append({'name': name, 'price': price})
+    total = sum(item['price'] for item in cart)
+    print(f"Added {name}, Total: \${total:.2f}")
+    return cart
+
+cart1 = add_item(cart1, "Laptop", 999.99)
+cart2 = add_item(cart2, "Mouse", 25.99)`,
+    solutionCode: `def add_item(cart=None, name="", price=0):
+    if cart is None:
+        cart = []
+    cart.append({'name': name, 'price': price})
+    total = sum(item['price'] for item in cart)
+    print(f"Added {name}, Total: \${total:.2f}")
+    return cart
+
+cart1 = add_item(None, "Laptop", 999.99)
+cart2 = add_item(None, "Mouse", 25.99)`,
+    buggyOutput: 'Added Laptop, Total: $999.99\nAdded Mouse, Total: $1025.98'
   },
   {
     id: 'dbg-py-5',
-    title: 'Find the Bug: List Average',
+    title: 'File Word Counter',
     language: 'python',
-    description: 'This function calculates the average of a list of numbers but fails to handle empty lists properly.',
-    buggyCode: `def calculate_average(nums):
-    total = sum(nums)
-    return total / len(nums)`,
-    solutionCode: `def calculate_average(nums):
-    if not nums: return 0
-    total = sum(nums)
-    return total / len(nums)`,
-    buggyOutput: 'Error: ZeroDivisionError: division by zero. The function crashes when an empty list is provided.'
+    description: 'Fix the logic error where characters are counted instead of words, and handle the input correctly.',
+    buggyCode: `def count_words(filename):
+    word_count = 0
+    with open(filename, 'r') as f:
+        for line in f:
+            word_count += len(line)
+    return word_count
+
+print(f"Words in file: {count_words('nonexistent.txt')}")`,
+    solutionCode: `def count_words(text):
+    word_count = 0
+    for line in text.split('\\n'):
+        word_count += len(line.split())
+    return word_count
+
+sample_text = """Hello world
+This is a test
+Python debugging practice"""
+print(f"Words in file: {count_words(sample_text)}")`,
+    buggyOutput: 'FileNotFoundError: [Errno 2] No such file or directory: \'nonexistent.txt\''
   },
   {
     id: 'dbg-py-6',
-    title: 'Find the Bug: Maximum Value',
+    title: 'URL Parser',
     language: 'python',
-    description: 'This function finds the maximum value in a list but fails when all numbers are negative.',
-    buggyCode: `def find_max(nums):
-    max_val = 0
-    for n in nums:
-        if n > max_val:
-            max_val = n
-    return max_val`,
-    solutionCode: `def find_max(nums):
-    if not nums: return None
-    max_val = nums[0]
-    for n in nums:
-        if n > max_val:
-            max_val = n
-    return max_val`,
-    buggyOutput: 'Incorrect output. For an input of [-5, -2, -10], the output is 0, which is incorrect.'
+    description: 'Fix the split logic and index errors when parsing URLs with or without protocols.',
+    buggyCode: `def parse_url(url):
+    parts = url.split('/')
+    protocol = parts[0]
+    domain = parts[2]
+    path = parts[3]
+    return f"{protocol}://{domain}/{path}"
+
+test_url = "example.com/api/users"
+print(parse_url(test_url))`,
+    solutionCode: `def parse_url(url):
+    if url.startswith(('http://', 'https://')):
+        protocol, rest = url.split('://', 1)
+        domain, path = rest.split('/', 1)
+    else:
+        protocol = 'http'
+        domain, path = url.split('/', 1)
+    return f"{protocol}://{domain}/{path}"
+
+test_url = "example.com/api/users"
+print(parse_url(test_url))`,
+    buggyOutput: 'IndexError: list index out of range'
   },
   {
     id: 'dbg-py-7',
-    title: 'Find the Bug: List Filtering',
+    title: 'Battery Monitor',
     language: 'python',
-    description: 'This function removes all even numbers from a list. It contains a common mistake related to modifying a list while iterating over it.',
-    buggyCode: `def remove_evens(nums):
-    for n in nums:
-        if n % 2 == 0:
-            nums.remove(n)
-    return nums`,
-    solutionCode: `def remove_evens(nums):
-    return [n for n in nums if n % 2 != 0]`,
-    buggyOutput: 'Incorrect output. Some even numbers are skipped because the list indices shift during removal.'
+    description: 'Fix the DivisionByZero error and incorrect logic in battery status calculation.',
+    buggyCode: `def battery_status(charge_history):
+    current = charge_history[-1]
+    previous = charge_history[-2]
+    rate = (current - previous) / (time.time() - time.time())
+    
+    if rate < -0.01:
+        return "discharging"
+    elif rate > 0.01:
+        return "charging"
+    else:
+        return "stable"
+
+history = [85, 82, 80, 78]
+print(battery_status(history))`,
+    solutionCode: `def battery_status(charge_history):
+    if len(charge_history) < 2:
+        return "insufficient data"
+    
+    current = charge_history[-1]
+    previous = charge_history[-2]
+    rate = (current - previous) / 1.0
+    
+    if rate < -1:
+        return "discharging"
+    elif rate > 1:
+        return "charging"
+    else:
+        return "stable"
+
+history = [85, 82, 80, 78]
+print(battery_status(history))`,
+    buggyOutput: 'ZeroDivisionError: division by zero'
   },
   // Java
   {
