@@ -7,8 +7,8 @@ import Link from 'next/link';
 
 const stats = [
   { title: 'Teams Registered', value: 'Live', icon: Users, color: 'text-blue-400' },
-  { title: 'MCQs Active', value: '40', icon: ListChecks, color: 'text-green-400' },
-  { title: 'Debug Problems', value: '10', icon: FileCode2, color: 'text-yellow-400' },
+  { title: 'MCQs Active', value: '80', icon: ListChecks, color: 'text-green-400' },
+  { title: 'Debug Problems', value: '18', icon: FileCode2, color: 'text-yellow-400' },
   { title: 'Competition Status', value: 'Active', icon: Trophy, color: 'text-purple-400' },
 ];
 
