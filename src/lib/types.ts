@@ -12,6 +12,7 @@ export type Team = {
   round2Time?: string;
   round3Score?: number;
   round3Time?: string;
+  registeredAt?: string;
 };
 
 export type MCQ = {
@@ -34,6 +35,7 @@ export type DebuggingProblem = {
 export type FinalProblem = {
   id: string;
   title: string;
+  language: 'java' | 'python';
   problemStatement: string;
   buggyCode: string;
   solutionCode: string;
