@@ -96,16 +96,23 @@ export function FinalRoundView() {
     
     switch (probId) {
       case 'fin-1': // Bank Account
-        return normalized.includes('deposit(self,amount):') && 
+        return normalized.includes('__init__') && 
+               normalized.includes('self.name=name') &&
+               normalized.includes('self.balance+=amount') &&
+               normalized.includes('withdraw(self,amount):') &&
                normalized.includes('ifamount>self.balance:') &&
-               normalized.includes('else:');
+               normalized.includes('acc.display()');
       case 'fin-2': // Library Management
         return normalized.includes('ifbook_nameinbooks:') && 
-               normalized.includes('else:');
+               normalized.includes('books.remove(book_name)') &&
+               normalized.includes('return_book(book_name):') &&
+               normalized.includes('borrow_book("Python")');
       case 'fin-3': // Student Result
-        return normalized.includes('intmarks[]={85,72,91};') && 
-               normalized.includes('Grade:A");') &&
-               normalized.includes('Grade:B");');
+        return normalized.includes('StudentResult') && 
+               normalized.includes('String[]args') &&
+               normalized.includes('i<names.length') &&
+               normalized.includes('marks[i]>=90') &&
+               normalized.includes('names[i]');
       default:
         return false;
     }
@@ -128,7 +135,7 @@ export function FinalRoundView() {
         setOutput(finalOutput);
         setIsSolutionCorrect(true);
       } else {
-        setOutput('Runtime Error: Logical mismatch detected. Check your syntax and colons/semicolons carefully.');
+        setOutput('Runtime Error: Logical mismatch detected. Check for syntax (colons, method names, variable case) carefully.');
         setIsSolutionCorrect(false);
       }
       setIsRunning(false);
